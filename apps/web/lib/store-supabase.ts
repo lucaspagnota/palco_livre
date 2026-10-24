@@ -20,6 +20,7 @@ export function traduz(msg: string) {
   if (/Email not confirmed/i.test(msg)) return 'Confirme seu e-mail antes de entrar (veja sua caixa de entrada).';
   if (/User already registered/i.test(msg)) return 'Já existe uma conta com esse e-mail.';
   if (/Password should be/i.test(msg)) return 'A senha precisa ter pelo menos 6 caracteres.';
+  if (/permission denied for (table|function|schema)/i.test(msg)) return 'O banco de dados ainda não liberou o acesso às tabelas (falta rodar permissoes.sql no Supabase).';
   if (/row-level security|Sem permiss/i.test(msg)) return 'Você não tem permissão para fazer isso.';
   if (/duplicate key.*grupo_membros/i.test(msg)) return 'Essa pessoa já está no grupo.';
   if (/duplicate key.*grupo_repertorios/i.test(msg)) return 'Esse repertório já está no grupo.';
@@ -89,7 +90,15 @@ export function createSupabaseStore(url: string, key: string): Store {
       return () => data.subscription.unsubscribe();
     },
     async entrar(email, senha) {
-      falha(await sb.auth.signInWithPassword({ email: email.trim(), password: senha }));
+      const res = await sb.auth.signInWithPassword({ email: email.trim(), password: senha });
+      falha(res);
+      // Confere o perfil já aqui: se o banco recusar, a tela mostra o motivo em vez de ficar parada.
+      try {
+        if (!(await lerPerfil(res.data.user!.id))) throw new Error('Não achei o seu perfil. Crie a conta de novo ou fale com quem cuida do site.');
+      } catch (e) {
+        await sb.auth.signOut();
+        throw e;
+      }
     },
     async criarConta(c) {
       const nick = c.nick.trim().toLowerCase();

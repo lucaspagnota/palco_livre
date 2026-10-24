@@ -55,6 +55,7 @@ function traduz(msg: string) {
   if (/Invalid login credentials/i.test(msg)) return 'E-mail ou senha incorretos.';
   if (/Email not confirmed/i.test(msg)) return 'Confirme seu e-mail antes de entrar (veja sua caixa de entrada).';
   if (/Failed to fetch|Network request failed|NetworkError/i.test(msg)) return 'Sem conexão com a internet. O conteúdo já baixado continua no aparelho.';
+  if (/permission denied for (table|function|schema)/i.test(msg)) return 'O banco de dados ainda não liberou o acesso às tabelas (falta rodar permissoes.sql no Supabase).';
   return msg;
 }
 
