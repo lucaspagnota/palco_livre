@@ -44,7 +44,8 @@ No Expo Go o leitor funciona por toque; o pedal só funciona no APK (passo 4).
 
 1. Crie uma conta em https://supabase.com e um projeto novo (região São Paulo).
 2. No projeto, abra **SQL Editor**, cole todo o arquivo `supabase/migrations/20261023180000_inicio.sql` e clique em **Run**.
-   Depois faça o mesmo com `supabase/migrations/20261024220000_permissoes.sql` (sem ele o Supabase recusa as consultas).
+   Depois faça o mesmo com os outros arquivos dessa pasta, na ordem dos nomes
+   (`20261024220000_permissoes.sql` e `20261024230000_dono_ve_o_que_criou.sql`).
 3. Em **Authentication › Sign In / Providers › Email**, desligue **Confirm email** se quiser que a conta funcione na hora, sem e-mail de confirmação.
 4. Em **Project Settings › API**, copie a **Project URL** e a chave **anon public**.
 

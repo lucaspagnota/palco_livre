@@ -1,4 +1,4 @@
--- Teste local das permissões (rodar com psql numa base com tests/stub-auth-local.sql e a migração).
+-- Teste local das permissões (rodar com psql numa base com tests/stub-auth-local.sql e todas as migrações, em ordem).
 \set ON_ERROR_STOP on
 grant usage on schema public, auth to authenticated;
 grant all on all tables in schema public to authenticated;
@@ -12,6 +12,12 @@ select nick from perfis order by email;
 
 set role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a', false);
+-- Criar e já receber a linha de volta, como o site faz (insert ... returning).
+do $$ declare x uuid; begin
+  insert into musicas (titulo) values ('volta') returning id into x; delete from musicas where id = x;
+  insert into repertorios (titulo) values ('volta') returning id into x; delete from repertorios where id = x;
+  insert into grupos (titulo) values ('volta') returning id into x; delete from grupos where id = x;
+end $$;
 insert into musicas (id, titulo, letra, publica) values ('10000000-0000-0000-0000-000000000001', 'Minha', 'C\nla', false);
 insert into musicas (id, titulo) values ('10000000-0000-0000-0000-000000000002', 'Só minha');
 insert into repertorios (id, titulo) values ('20000000-0000-0000-0000-000000000001', 'Show');

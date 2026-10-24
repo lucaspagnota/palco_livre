@@ -63,9 +63,10 @@ export const ESTILOS = [
   'Rock', 'Romântica', 'Samba', 'Sertanejo',
 ];
 
+/** Cada tom maior seguido do menor, para o menor aparecer logo ao lado na lista. */
 export const TONS = [
-  'C', 'C#', 'Db', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'G#', 'Ab', 'A', 'A#', 'Bb', 'B',
-  'Cm', 'C#m', 'Dm', 'D#m', 'Ebm', 'Em', 'Fm', 'F#m', 'Gm', 'G#m', 'Am', 'A#m', 'Bbm', 'Bm',
+  'C', 'Cm', 'C#', 'C#m', 'Db', 'D', 'Dm', 'D#', 'D#m', 'Eb', 'Ebm', 'E', 'Em', 'F', 'Fm', 'F#', 'F#m', 'Gb',
+  'G', 'Gm', 'G#', 'G#m', 'Ab', 'A', 'Am', 'A#', 'A#m', 'Bb', 'Bbm', 'B', 'Bm',
 ];
 
 export const UFS = ['AC', 'AL', 'AM', 'AP', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MG', 'MS', 'MT', 'PA', 'PB', 'PE', 'PI', 'PR', 'RJ', 'RN', 'RO', 'RR', 'RS', 'SC', 'SE', 'SP', 'TO'];
