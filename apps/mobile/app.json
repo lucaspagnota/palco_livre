@@ -2,6 +2,7 @@
   "expo": {
     "name": "Palco Livre",
     "slug": "palco-livre",
+    "owner": "lucaspagnotas-team",
     "version": "4.0.0",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
@@ -42,6 +43,11 @@
     "experiments": {
       "typedRoutes": false,
       "reactCompiler": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "7c6c0be3-afbb-458b-bea0-0431bb652b68"
+      }
     }
   }
 }
