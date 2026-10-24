@@ -13,10 +13,15 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_SUPABASE_URL": "",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": ""
+        "EXPO_PUBLIC_SUPABASE_URL": "https://lcqeoyfxaveezbapaupo.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_Te-BW3ZkSy5PcPddCb_XZw_Dgtjgs1A"
       }
     },
-    "production": {}
+    "production": {
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://lcqeoyfxaveezbapaupo.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_Te-BW3ZkSy5PcPddCb_XZw_Dgtjgs1A"
+      }
+    }
   }
 }
