@@ -1,0 +1,17 @@
+{
+  "name": "palco-livre",
+  "private": true,
+  "version": "4.0.0",
+  "workspaces": [
+    "packages/*",
+    "apps/web"
+  ],
+  "scripts": {
+    "test": "npm run test --workspace @palco/cifra",
+    "dev:web": "npm run dev --workspace @palco/web",
+    "build:web": "npm run build --workspace @palco/web",
+    "instalar:app": "npm --prefix apps/mobile install",
+    "dev:app": "npm --prefix apps/mobile run start",
+    "build:index": "vite build --config apps/web/spa/vite.config.mjs && node apps/web/spa/montar.mjs"
+  }
+}
