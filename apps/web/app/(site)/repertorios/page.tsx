@@ -8,6 +8,7 @@ import { Ajuda, RodapeAjuda } from '@/components/Ajuda';
 import { Icone } from '@/components/Icone';
 import { MenuMais } from '@/components/MenuMais';
 import { useDados } from '@/lib/dados';
+import { abrir, naMesmaTelaSeInstalado } from '@/lib/instalado';
 import { useTabela } from '@/lib/tabela';
 
 export default function Repertorios() {
@@ -106,10 +107,10 @@ export default function Repertorios() {
                   <td className="some-cel">{r.copias}</td>
                   <td className="some-cel">{revisao(r.atualizadoEm)}</td>
                   <td className="acoes">
-                    <a className="pilula escura" href={'/tocar?repertorio=' + r.id} target="_blank" rel="noreferrer" aria-label={'Tocar ' + r.titulo} title="Abrir no leitor"><Icone nome="tocar" tamanho={15} /></a>
+                    <a className="pilula escura" href={'/tocar?repertorio=' + r.id} target="_blank" rel="noreferrer" onClick={naMesmaTelaSeInstalado} aria-label={'Tocar ' + r.titulo} title="Abrir no leitor"><Icone nome="tocar" tamanho={15} /></a>
                     <MenuMais opcoes={[
                       { rotulo: 'Editar', acao: () => router.push('/repertorios/editor?id=' + r.id) },
-                      { rotulo: 'Abrir no leitor', acao: () => window.open('/tocar?repertorio=' + r.id, '_blank') },
+                      { rotulo: 'Abrir no leitor', acao: () => abrir('/tocar?repertorio=' + r.id) },
                       { rotulo: r.donoId === eu ? 'Duplicar' : 'Copiar para meus repertórios', acao: () => copiar(r.id) },
                       r.donoId === eu ? { rotulo: 'Excluir', perigo: true, acao: () => excluir([r.id]) } : null,
                     ]} />

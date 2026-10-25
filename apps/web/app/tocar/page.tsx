@@ -193,7 +193,7 @@ function Leitor() {
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: a.fundo, display: 'flex', flexDirection: 'column', userSelect: 'none', fontFamily: 'var(--ui)' }}>
+    <div style={{ position: 'fixed', inset: 0, background: a.fundo, display: 'flex', flexDirection: 'column', userSelect: 'none', WebkitUserSelect: 'none', touchAction: 'manipulation', fontFamily: 'var(--ui)' }}>
       <div style={{ display: 'flex', alignItems: 'center', borderBottom: '2px solid #2f4f4f', cursor: 'pointer', padding: '2px 8px 4px' }}>
         <div style={{ flex: 3, minWidth: 0 }} onClick={anterior} title="Música anterior">
           <div style={{ color: verde, fontWeight: 900, fontSize: 19, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{musica?.titulo.toUpperCase() ?? '…'}</div>

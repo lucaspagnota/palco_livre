@@ -12,6 +12,8 @@ export interface Dados {
   repertorios: Repertorio[];
   grupos: Grupo[];
   perfis: Record<string, Perfil>;
+  /** Preenchido quando veio da cópia guardada no aparelho (sem internet): quando a cópia foi feita. */
+  copiaDe?: string;
 }
 
 export interface NovaConta {

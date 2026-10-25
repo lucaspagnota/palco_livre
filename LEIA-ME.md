@@ -84,6 +84,18 @@ Se o `git commit` pedir seu nome, rode antes `git config --global user.name "Luc
 
 O EAS monta o APK na nuvem (uns 15 minutos) e mostra um link. Abra o link no celular ou tablet e instale.
 
+## 5. iPhone e iPad (sem App Store)
+
+O site também funciona como app no iPhone e no iPad, sem pagar a Apple:
+
+1. Abra o endereço do site no **Safari**.
+2. Toque em **Compartilhar** (o quadrado com a seta para cima) e depois em **Adicionar à Tela de Início**.
+3. Abra pelo ícone novo e entre na conta (o ícone não usa o login do Safari, é preciso entrar uma vez nele).
+
+Com internet, ele guarda no aparelho todas as músicas e repertórios da conta. Sem internet, abre e toca o que
+ficou guardado; para salvar alguma mudança, precisa estar conectado. Quem cuida disso é `apps/web/public/sw.js`
+(as telas) e `apps/web/lib/store-offline.ts` (as músicas e repertórios).
+
 ## Como a banda usa
 
 1. Cada integrante cria a conta no site (o app usa o mesmo e-mail e senha).

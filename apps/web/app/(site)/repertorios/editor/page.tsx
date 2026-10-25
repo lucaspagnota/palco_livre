@@ -7,6 +7,7 @@ import { ESTILOS, notePitch, parseChord, semAcento } from '@palco/cifra';
 import { Ajuda, RodapeAjuda } from '@/components/Ajuda';
 import { Icone } from '@/components/Icone';
 import { useDados } from '@/lib/dados';
+import { naMesmaTelaSeInstalado } from '@/lib/instalado';
 import { imprimirSetlist } from '@/lib/setlist';
 import type { ItemRepertorio, MusicaResumo, Repertorio } from '@/lib/tipos';
 
@@ -319,7 +320,7 @@ function EditorRepertorio() {
         <button type="button" className="btn pessego" onClick={setlist} disabled={!linhas.some(ehMusica)} title="Imprimir ou salvar em PDF para mandar">Setlist</button>
         {alterado ? <span style={{ color: 'var(--suave)', fontSize: 15 }}>Alterações não salvas</span> : null}
         {msg ? <span className={msg.tipo === 'ok' ? 'ok' : 'erro'} style={{ margin: 0, padding: '6px 12px' }}>{msg.texto}</span> : null}
-        {id ? <a className="btn escuro pq" href={'/tocar?repertorio=' + id} target="_blank" rel="noreferrer" style={{ marginLeft: 'auto' }}><Icone nome="tocar" tamanho={16} /> Abrir no leitor</a> : null}
+        {id ? <a className="btn escuro pq" href={'/tocar?repertorio=' + id} target="_blank" rel="noreferrer" onClick={naMesmaTelaSeInstalado} style={{ marginLeft: 'auto' }}><Icone nome="tocar" tamanho={16} /> Abrir no leitor</a> : null}
       </div>
       {somenteLeitura ? <div className="aviso-demo">Este repertório é de <b>{dados.perfis[original!.donoId]?.nick}</b> e chegou pelo grupo. Só o dono pode editar.</div> : null}
 

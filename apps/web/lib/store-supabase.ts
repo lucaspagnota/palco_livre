@@ -15,6 +15,8 @@ function falha(res: { error: { message: string } | null }) {
   if (res.error) throw new Error(traduz(res.error.message));
 }
 
+export const SEM_CONEXAO = 'Sem conexão com a internet.';
+
 export function traduz(msg: string) {
   if (/Invalid login credentials/i.test(msg)) return 'E-mail ou senha incorretos.';
   if (/Email not confirmed/i.test(msg)) return 'Confirme seu e-mail antes de entrar (veja sua caixa de entrada).';
@@ -24,7 +26,8 @@ export function traduz(msg: string) {
   if (/row-level security|Sem permiss/i.test(msg)) return 'Você não tem permissão para fazer isso.';
   if (/duplicate key.*grupo_membros/i.test(msg)) return 'Essa pessoa já está no grupo.';
   if (/duplicate key.*grupo_repertorios/i.test(msg)) return 'Esse repertório já está no grupo.';
-  if (/Failed to fetch|NetworkError/i.test(msg)) return 'Sem conexão com a internet.';
+  // "Load failed" é como o Safari (iPhone) avisa que a internet caiu.
+  if (/Failed to fetch|NetworkError|Load failed|Network request failed/i.test(msg)) return SEM_CONEXAO;
   return msg;
 }
 
@@ -65,7 +68,8 @@ export function createSupabaseStore(url: string, key: string): Store {
   const sb: SupabaseClient = createClient(url, key);
 
   async function meuId() {
-    const { data } = await sb.auth.getSession();
+    const { data, error } = await sb.auth.getSession();
+    if (error) throw new Error(traduz(error.message));
     const id = data.session?.user.id;
     if (!id) throw new Error('Entre na sua conta primeiro.');
     return id;
@@ -79,13 +83,19 @@ export function createSupabaseStore(url: string, key: string): Store {
   const store: Store = {
     demo: false,
     async eu() {
-      const { data } = await sb.auth.getSession();
+      // Sem internet a sessão não renova e vem com erro: isso não é "saiu da conta".
+      const { data, error } = await sb.auth.getSession();
+      if (error) throw new Error(traduz(error.message));
       return data.session ? lerPerfil(data.session.user.id) : null;
     },
     aoMudarConta(cb) {
-      const { data } = sb.auth.onAuthStateChange((_e, s) => {
-        if (!s) cb(null);
-        else setTimeout(() => { lerPerfil(s.user.id).then(cb, () => cb(null)); }, 0);
+      let saidas = 0;
+      const { data } = sb.auth.onAuthStateChange((e, s) => {
+        // Só sai de verdade com SIGNED_OUT; sem internet a sessão inicial pode vir vazia, e o eu() já cuida dela.
+        if (!s) { if (e === 'SIGNED_OUT') { saidas++; cb(null); } return; }
+        // O perfil chega depois; se nesse meio-tempo a pessoa saiu da conta, ele não vale mais.
+        const antes = saidas;
+        setTimeout(() => { lerPerfil(s.user.id).then(p => { if (antes === saidas) cb(p); }, () => { /* sem internet: continua como está */ }); }, 0);
       });
       return () => data.subscription.unsubscribe();
     },
@@ -115,7 +125,9 @@ export function createSupabaseStore(url: string, key: string): Store {
       falha(await sb.auth.updateUser({ password: senha }));
     },
     async sair() {
-      await sb.auth.signOut();
+      // Sem internet o Supabase não consegue encerrar no servidor; aí sai só deste aparelho.
+      const { error } = await sb.auth.signOut();
+      if (error) await sb.auth.signOut({ scope: 'local' });
     },
     async salvarPerfil(p) {
       ok(await sb.from('perfis').update({ nome: p.nome, uf: p.uf }).eq('id', await meuId()));

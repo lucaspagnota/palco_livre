@@ -1,5 +1,6 @@
 // Setlist para imprimir ou salvar em PDF e mandar para alguém: a lista do repertório,
 // com os blocos e as pausas como no setlist impresso da banda.
+import { instalado } from './instalado';
 import type { ItemRepertorio, MusicaResumo } from './tipos';
 
 export interface DadosSetlist {
@@ -74,8 +75,9 @@ ${linhas}
 /** Abre a janela de impressão do navegador, onde dá para escolher "Salvar como PDF". */
 export function imprimirSetlist(s: DadosSetlist) {
   const html = htmlDoSetlist(s);
-  // Uma janela só com o setlist. Se o navegador bloquear a janela, imprime por um quadro escondido.
-  const janela = window.open('', '_blank');
+  // Uma janela só com o setlist. Se o navegador bloquear a janela (ou no app instalado, onde ela
+  // sairia para o Safari), imprime por um quadro escondido.
+  const janela = instalado() ? null : window.open('', '_blank');
   if (janela) {
     janela.document.open();
     janela.document.write(html);

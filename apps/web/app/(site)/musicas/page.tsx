@@ -8,6 +8,7 @@ import { Ajuda, RodapeAjuda } from '@/components/Ajuda';
 import { Icone } from '@/components/Icone';
 import { MenuMais } from '@/components/MenuMais';
 import { useDados } from '@/lib/dados';
+import { abrir, naMesmaTelaSeInstalado } from '@/lib/instalado';
 import { useTabela } from '@/lib/tabela';
 
 export default function Musicas() {
@@ -133,10 +134,10 @@ export default function Musicas() {
                   <td className="some-cel">{revisao(m.atualizadoEm)}</td>
                   <td className="some-cel">{reps.get(m.id) ?? 0}</td>
                   <td className="acoes">
-                    <a className="pilula escura" href={'/tocar?musica=' + m.id} target="_blank" rel="noreferrer" aria-label={'Tocar ' + m.titulo} title="Abrir no leitor"><Icone nome="tocar" tamanho={15} /></a>
+                    <a className="pilula escura" href={'/tocar?musica=' + m.id} target="_blank" rel="noreferrer" onClick={naMesmaTelaSeInstalado} aria-label={'Tocar ' + m.titulo} title="Abrir no leitor"><Icone nome="tocar" tamanho={15} /></a>
                     <MenuMais opcoes={[
                       { rotulo: 'Editar', acao: () => router.push('/musicas/editor?id=' + m.id) },
-                      { rotulo: 'Abrir no leitor', acao: () => window.open('/tocar?musica=' + m.id, '_blank') },
+                      { rotulo: 'Abrir no leitor', acao: () => abrir('/tocar?musica=' + m.id) },
                       { rotulo: m.donoId === eu ? 'Duplicar' : 'Copiar para minhas músicas', acao: () => copiar(m.id) },
                       m.donoId === eu ? { rotulo: 'Excluir', perigo: true, acao: () => excluir([m.id]) } : null,
                     ]} />

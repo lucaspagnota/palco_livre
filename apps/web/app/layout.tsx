@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Roboto, Roboto_Mono, Rubik } from 'next/font/google';
 import { SCRIPT_TEMA } from '@/components/BotaoTema';
+import { RegistrarSW } from '@/components/RegistrarSW';
 import { DadosProvider } from '@/lib/dados';
 import './globals.css';
 
@@ -11,6 +12,9 @@ const logo = Rubik({ subsets: ['latin'], weight: ['800'], variable: '--font-logo
 export const metadata: Metadata = {
   title: { default: 'Palco Livre', template: 'Palco Livre | %s' },
   description: 'Cifras, repertórios e grupos para a sua banda.',
+  applicationName: 'Palco Livre',
+  // Na tela de início do iPhone abre em tela cheia, com a barra de cima escura.
+  appleWebApp: { capable: true, title: 'Palco Livre', statusBarStyle: 'black' },
 };
 
 export const viewport: Viewport = { themeColor: '#0b1d33' };
@@ -23,6 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <DadosProvider>{children}</DadosProvider>
+        <RegistrarSW />
       </body>
     </html>
   );
