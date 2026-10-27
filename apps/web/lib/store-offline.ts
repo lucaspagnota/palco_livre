@@ -192,6 +192,7 @@ export function comCopiaOffline(base: Store, alcancavel: () => Promise<boolean>)
     salvarMusica: precisaInternet(base.salvarMusica),
     apagarMusicas: precisaInternet(base.apagarMusicas),
     copiarMusica: precisaInternet(base.copiarMusica),
+    importarMusicas: precisaInternet(base.importarMusicas),
 
     salvarRepertorio: precisaInternet(base.salvarRepertorio),
     apagarRepertorios: precisaInternet(base.apagarRepertorios),

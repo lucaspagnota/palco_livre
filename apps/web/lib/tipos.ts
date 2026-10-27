@@ -46,6 +46,8 @@ export interface Store {
   salvarMusica(m: MusicaEditada): Promise<string>;
   apagarMusicas(ids: string[]): Promise<void>;
   copiarMusica(id: string): Promise<string>;
+  /** Cadastra várias músicas de uma vez (Importar). Avisa quantas já foram, para mostrar o andamento. */
+  importarMusicas(ms: Omit<MusicaEditada, 'id'>[], aoAvancar?: (feitas: number) => void): Promise<number>;
 
   salvarRepertorio(r: RepertorioEditado): Promise<string>;
   apagarRepertorios(ids: string[]): Promise<void>;

@@ -4,7 +4,7 @@
 
 const VERSAO = new URL(self.location.href).searchParams.get('v') || 'dev';
 const CACHE = 'palco-livre-' + VERSAO;
-const PAGINAS = ['/musicas', '/repertorios', '/grupos', '/conta', '/tocar', '/entrar', '/musicas/editor', '/repertorios/editor', '/grupos/editor'];
+const PAGINAS = ['/musicas', '/repertorios', '/grupos', '/conta', '/tocar', '/entrar', '/musicas/editor', '/musicas/importar', '/repertorios/editor', '/grupos/editor'];
 const EXTRAS = ['/manifest.webmanifest', '/icone-192.png', '/icone-512.png'];
 // Scripts, estilos e fontes que cada tela usa, achados no próprio HTML.
 const ARQUIVOS = /\/_next\/static\/[^"'\s\\)<>]+/g;

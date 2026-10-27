@@ -135,6 +135,13 @@ export function createLocalStore(): Store {
         return nova.id;
       });
     },
+    async importarMusicas(ms, aoAvancar) {
+      mudar((b, eu) => {
+        for (const m of ms) b.musicas.push({ ...m, id: novoId('m'), donoId: eu, copias: 0, atualizadoEm: agora() });
+      });
+      aoAvancar?.(ms.length);
+      return ms.length;
+    },
     async apagarMusicas(ids) {
       mudar((b, eu) => {
         const apagar = new Set(b.musicas.filter(m => ids.includes(m.id) && m.donoId === eu).map(m => m.id));

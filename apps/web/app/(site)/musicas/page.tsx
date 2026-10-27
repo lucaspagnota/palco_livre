@@ -71,6 +71,7 @@ export default function Musicas() {
         <Ajuda titulo="Minhas músicas">
           <ul>
             <li><b>Nova</b> abre o editor para cadastrar uma música.</li>
+            <li><b>Importar</b> traz várias músicas de uma vez, como as que você tem no Toque Fácil.</li>
             <li>Clique no <b>título</b> para editar. Clique no <b>artista</b> para ver só as músicas dele.</li>
             <li>Clique no nome de uma coluna para ordenar por ela.</li>
             <li>O botão escuro abre a música no leitor, igual à tela do app.</li>
@@ -95,12 +96,13 @@ export default function Musicas() {
           <option value="todas">Todas</option>
         </select>
         <Link href="/musicas/editor" className="btn verde">Nova</Link>
+        <Link href="/musicas/importar" className="btn ciano">Importar</Link>
         <button type="button" className="btn vermelho" onClick={() => excluir(t.selecionadas)} disabled={!t.selecionadas.length}>Excluir</button>
       </div>
       {erro ? <div className="erro">{erro}</div> : null}
 
       {!dados ? <p>Carregando…</p> : filtradas.length === 0 ? (
-        <div className="vazio">{daVez.length ? 'Nenhuma música com esses filtros.' : de === 'minhas' ? 'Nenhuma música ainda. Clique em Nova para cadastrar a primeira.' : 'Nenhuma música recebida.'}</div>
+        <div className="vazio">{daVez.length ? 'Nenhuma música com esses filtros.' : de === 'minhas' ? 'Nenhuma música ainda. Clique em Nova para cadastrar a primeira, ou em Importar para trazer as do Toque Fácil.' : 'Nenhuma música recebida.'}</div>
       ) : (
         <div className="tabela-rolagem">
           <table className="lista">

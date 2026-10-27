@@ -165,6 +165,17 @@ export function createSupabaseStore(url: string, key: string): Store {
     async apagarMusicas(ids) {
       ok(await sb.from('musicas').delete().in('id', ids));
     },
+    async importarMusicas(ms, aoAvancar) {
+      // Em lotes, para não mandar centenas de letras num pedido só.
+      let feitas = 0;
+      for (let i = 0; i < ms.length; i += 50) {
+        const lote = ms.slice(i, i + 50).map(m => ({ titulo: m.titulo, artista: m.artista, estilo: m.estilo, tom: m.tom, capo: m.capo, letra: m.letra, publica: m.publica }));
+        ok(await sb.from('musicas').insert(lote));
+        feitas += lote.length;
+        aoAvancar?.(feitas);
+      }
+      return feitas;
+    },
     async copiarMusica(id) {
       const [m] = await store.musicas([id]);
       if (!m) throw new Error('Música não encontrada.');
