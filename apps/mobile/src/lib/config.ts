@@ -73,11 +73,13 @@ export function lerConfig(): Config {
 
 export const salvarConfig = (c: Config) => localStorage.setItem(CHAVE, JSON.stringify({ ...c, versaoCores: VERSAO_CORES }));
 
-/** Tom escolhido no leitor para cada música (meios-tons a partir do original). */
-export function lerTons(): Record<string, number> {
-  try { return JSON.parse(localStorage.getItem(CHAVE_TONS) ?? '{}'); } catch { return {}; }
+/**
+ * Até a versão 4.0.0 o tom mudado no leitor ficava guardado no aparelho. Agora ele vale só enquanto o
+ * repertório está aberto (o tom de verdade só muda no site), então apaga o que ficou guardado.
+ */
+export function esquecerTonsGuardados() {
+  try { localStorage.removeItem(CHAVE_TONS); } catch { /* nada guardado */ }
 }
-export const salvarTons = (t: Record<string, number>) => localStorage.setItem(CHAVE_TONS, JSON.stringify(t));
 
 export function acaoDaTecla(mapa: MapaPedal, tecla: string): AcaoPedal | null {
   for (const a of Object.keys(mapa) as AcaoPedal[]) if (mapa[a].includes(tecla)) return a;

@@ -44,7 +44,7 @@ export default function Leitor() {
 function Painel() {
   useKeepAwake();
   const params = useLocalSearchParams<{ repertorio?: string; inicio?: string; musicas?: string; musica?: string }>();
-  const { conteudo, config, mudarConfig, tons, mudarTom } = useStore();
+  const { conteudo, config, mudarConfig } = useStore();
   const insets = useSafeAreaInsets();
   const janela = useWindowDimensions();
   const hora = useHora();
@@ -62,6 +62,10 @@ function Painel() {
   const [pagina, setPagina] = useState(0);
   const [area, setArea] = useState({ w: 0, h: 0 });
   const [opcoes, setOpcoes] = useState(false);
+  // Tom mudado aqui (meios-tons a partir do original de cada música). Vale enquanto o repertório está
+  // aberto, indo e voltando entre as músicas; ao sair, volta ao tom da música. Para mudar de vez, só no site.
+  const [tons, setTons] = useState<Record<string, number>>({});
+  const mudarTom = (id: string, passos: number) => setTons(atual => ({ ...atual, [id]: passos }));
   const [instrucoes, setInstrucoes] = useState(config.instrucoes && !instrucoesVistas);
   const irParaFim = useRef(false);
   const rolagem = useRef<ComponentRef<typeof ScrollView>>(null);
