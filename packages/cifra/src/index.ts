@@ -6,3 +6,4 @@ export type { ChordShape } from './shapes';
 export * from './modelo';
 export * from './repertorio';
 export * from './aparencia';
+export * from './toquefacil';

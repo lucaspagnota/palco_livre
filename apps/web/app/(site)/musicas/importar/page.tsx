@@ -16,6 +16,7 @@ async function lerTexto(f: File) {
 export default function Importar() {
   const { dados, store, recarregar } = useDados();
   const [lidas, setLidas] = useState<MusicaImportada[] | null>(null);
+  const [falhas, setFalhas] = useState<string[]>([]);
   const [nomeArquivo, setNomeArquivo] = useState('');
   const [comRepetidas, setComRepetidas] = useState(false);
   const [feitas, setFeitas] = useState<number | null>(null);
@@ -34,9 +35,15 @@ export default function Importar() {
     if (!arquivos.length) return;
     try {
       const todas: MusicaImportada[] = [];
-      for (const f of arquivos) todas.push(...lerArquivo(await lerTexto(f), f.name));
+      const naoVieram: string[] = [];
+      for (const f of arquivos) {
+        const l = lerArquivo(await lerTexto(f), f.name);
+        todas.push(...l.musicas);
+        naoVieram.push(...l.falhas);
+      }
       if (!todas.length) throw new Error('Não achei nenhuma música nesse arquivo.');
       setLidas(todas);
+      setFalhas(naoVieram);
       setNomeArquivo(arquivos.length === 1 ? arquivos[0].name : arquivos.length + ' arquivos');
     } catch (e) {
       setMsg({ tipo: 'erro', texto: (e as Error).message });
@@ -94,6 +101,12 @@ export default function Importar() {
             <b>{nomeArquivo}</b>: {lidas.length === 1 ? '1 música' : lidas.length + ' músicas'}.
             {qtdRepetidas ? ` ${qtdRepetidas === 1 ? '1 já está' : qtdRepetidas + ' já estão'} na sua conta com o mesmo título e artista.` : ''}
           </p>
+          {falhas.length ? (
+            <div className="aviso-demo">
+              {falhas.length === 1 ? '1 música não veio' : falhas.length + ' músicas não vieram'} do Toque Fácil (não abriram na hora de copiar):{' '}
+              <b>{falhas.join(', ')}</b>. Dá para rodar o favorito de novo depois; as que já estiverem aqui não se repetem.
+            </div>
+          ) : null}
           <div className="mini-barra" style={{ alignItems: 'center', flexWrap: 'wrap', gap: 14, marginBottom: 12 }}>
             {qtdRepetidas ? (
               <label className="check"><input type="checkbox" checked={comRepetidas} onChange={e => setComRepetidas(e.target.checked)} disabled={importando} /> Importar também as repetidas</label>

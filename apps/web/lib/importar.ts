@@ -1,9 +1,15 @@
 // Leitura dos arquivos da tela Importar: o .json que o favorito "Exportar para o Palco Livre" baixa
 // do Toque Fácil, ou arquivos .txt soltos (um por música).
-import { ESTILOS, TONS, expandTabs, limparTexto, semAcento } from '@palco/cifra';
+import { ESTILOS, TONS, deToqueFacil, expandTabs, limparTexto, semAcento } from '@palco/cifra';
 import type { MusicaEditada } from './tipos';
 
 export type MusicaImportada = Omit<MusicaEditada, 'id'>;
+
+export interface Leitura {
+  musicas: MusicaImportada[];
+  /** Títulos que o favorito do Toque Fácil não conseguiu copiar. */
+  falhas: string[];
+}
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -28,8 +34,9 @@ function estilo(x: unknown) {
   return ESTILOS.find(s => semAcento(s) === semAcento(e)) ?? e;
 }
 
-function musica(r: any): MusicaImportada | null {
-  const letra = expandTabs(limparTexto(typeof r?.letra === 'string' ? r.letra : '')).replace(/[ \t]+$/gm, '').replace(/^\n+|\n+$/g, '');
+function musica(r: any, doToqueFacil = false): MusicaImportada | null {
+  let letra = expandTabs(limparTexto(typeof r?.letra === 'string' ? r.letra : '')).replace(/[ \t]+$/gm, '').replace(/^\n+|\n+$/g, '');
+  if (doToqueFacil) letra = deToqueFacil(letra);
   const titulo = texto(r?.titulo);
   if (!titulo && !letra) return null;
   return { titulo: titulo || 'Sem título', artista: texto(r?.artista), estilo: estilo(r?.estilo), tom: tom(r?.tom), capo: capo(r?.capo), letra, publica: false };
@@ -42,14 +49,18 @@ function doNomeDoArquivo(nome: string) {
   return partes.length === 2 ? { artista: partes[0], titulo: partes[1] } : { artista: '', titulo: base };
 }
 
-export function lerArquivo(conteudo: string, nomeArquivo: string): MusicaImportada[] {
+export function lerArquivo(conteudo: string, nomeArquivo: string): Leitura {
   if (/\.json$/i.test(nomeArquivo) || /^\s*[[{]/.test(conteudo)) {
     let dados: any;
     try { dados = JSON.parse(conteudo); } catch { throw new Error(`O arquivo ${nomeArquivo} não é um arquivo de músicas válido.`); }
     const lista = Array.isArray(dados) ? dados : Array.isArray(dados?.musicas) ? dados.musicas : null;
     if (!lista) throw new Error(`Não achei músicas no arquivo ${nomeArquivo}.`);
-    return lista.map(musica).filter((m: MusicaImportada | null): m is MusicaImportada => !!m);
+    const doToqueFacil = dados?.origem === 'toque-facil';
+    return {
+      musicas: lista.map((r: any) => musica(r, doToqueFacil)).filter((m: MusicaImportada | null): m is MusicaImportada => !!m),
+      falhas: Array.isArray(dados?.falhas) ? dados.falhas.map((f: any) => texto(f?.titulo) || texto(f?.endereco)).filter(Boolean) : [],
+    };
   }
   const m = musica({ ...doNomeDoArquivo(nomeArquivo), letra: conteudo });
-  return m ? [m] : [];
+  return { musicas: m ? [m] : [], falhas: [] };
 }

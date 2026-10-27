@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   chordShape, chordsOf, gridFor, isTabLine, layoutBlocks, layoutPages, listChords, paginate, readSource, transposeChord,
-  transposeSource, chordIntervals, passosDoShow, layoutRows,
+  transposeSource, chordIntervals, passosDoShow, layoutRows, deToqueFacil,
 } from '../src';
 import { DEMO_MUSICAS } from '../src/demo';
 
@@ -149,5 +149,55 @@ describe('texto colado de outros lugares', () => {
     expect(layoutRows('Bb\nletra', { cols: 40, steps: 1, key: 'B' })[0].text).toBe('B');
     expect(layoutRows('Bb\nletra', { cols: 40, steps: 1, key: 'Cb' })[0].text).toBe('B');
     expect(layoutRows('A\nletra', { cols: 40, steps: 1, key: 'Bb' })[0].text).toBe('Bb');
+  });
+});
+
+describe('letra vinda do Toque Fácil', () => {
+  it('troca as marcas de refrão, 2ª voz e anotação pelas do Palco Livre', () => {
+    const tf = [
+      '[Primeira Parte]',
+      '   C',
+      'Minha vida',
+      '',
+      '|     A          C#m',
+      '|Não dá! Não dá!',
+      '|:Pra ficar',
+      '|#repete 2x',
+      '',
+      ':Só a segunda voz',
+      '#entra a bateria',
+      'e|---3---2---|',
+      '|---0---2---|',
+    ].join('\n');
+    expect(deToqueFacil(tf).split('\n')).toEqual([
+      '[Primeira Parte]',
+      '   C',
+      'Minha vida',
+      '',
+      '{refrão}',
+      '     A          C#m',
+      'Não dá! Não dá!',
+      '{2ª voz}',
+      'Pra ficar',
+      '{/2ª voz}',
+      '// repete 2x',
+      '{/refrão}',
+      '',
+      '{2ª voz}',
+      'Só a segunda voz',
+      '{/2ª voz}',
+      '// entra a bateria',
+      'e|---3---2---|',
+      '|---0---2---|',
+    ]);
+    const linhas = readSource(deToqueFacil(tf));
+    expect(linhas.find(l => l.text.startsWith('Não dá'))?.refrao).toBe(true);
+    expect(linhas.find(l => l.text === 'Só a segunda voz')?.voz2).toBe(true);
+    expect(linhas.filter(l => l.kind === 'tab')).toHaveLength(2);
+  });
+
+  it('não mexe numa letra sem marcas', () => {
+    const tf = '100% Você\nTom: A\n\n[Intro] E  A  C#m  D  E\n        A  C#m  D  E\n\n( A  C#m  D  E )';
+    expect(deToqueFacil(tf)).toBe(tf);
   });
 });
