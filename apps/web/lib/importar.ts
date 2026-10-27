@@ -1,5 +1,5 @@
-// Leitura dos arquivos da tela Importar: o .json que o favorito "Exportar para o Palco Livre" baixa
-// do Toque Fácil, ou arquivos .txt soltos (um por música).
+// Leitura dos arquivos de músicas da tela Importar: o .json que o favorito "Exportar do Toque Fácil" baixa
+// da página Minhas músicas, ou arquivos .txt soltos (um por música). Os repertórios ficam em importar-repertorios.ts.
 import { ESTILOS, TONS, deToqueFacil, expandTabs, limparTexto, semAcento } from '@palco/cifra';
 import type { MusicaEditada } from './tipos';
 
@@ -18,7 +18,7 @@ export const chaveMusica = (titulo: string, artista: string) => semAcento(titulo
 
 const texto = (x: unknown) => (typeof x === 'string' ? x : typeof x === 'number' ? String(x) : '').trim();
 
-function tom(x: unknown) {
+export function tomImportado(x: unknown) {
   const t = texto(x).replace(/\s+/g, '').replace('♯', '#').replace('♭', 'b');
   return TONS.find(c => c.toLowerCase() === t.toLowerCase()) ?? '';
 }
@@ -29,7 +29,7 @@ function capo(x: unknown): number | null {
 }
 
 /** Usa o nome da lista do Palco Livre quando é o mesmo estilo escrito de outro jeito ("mpb" → "MPB"). */
-function estilo(x: unknown) {
+export function estiloImportado(x: unknown) {
   const e = texto(x);
   return ESTILOS.find(s => semAcento(s) === semAcento(e)) ?? e;
 }
@@ -39,7 +39,7 @@ function musica(r: any, doToqueFacil = false): MusicaImportada | null {
   if (doToqueFacil) letra = deToqueFacil(letra);
   const titulo = texto(r?.titulo);
   if (!titulo && !letra) return null;
-  return { titulo: titulo || 'Sem título', artista: texto(r?.artista), estilo: estilo(r?.estilo), tom: tom(r?.tom), capo: capo(r?.capo), letra, publica: false };
+  return { titulo: titulo || 'Sem título', artista: texto(r?.artista), estilo: estiloImportado(r?.estilo), tom: tomImportado(r?.tom), capo: capo(r?.capo), letra, publica: false };
 }
 
 /** "Artista - Título.txt" vira artista e título; sem o traço, o nome inteiro é o título. */

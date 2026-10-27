@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { FAVORITO_TOQUE_FACIL } from '@/lib/exportar-toque-facil';
 
-/** Passo a passo e o botão que vai para a barra de favoritos, para tirar as músicas do Toque Fácil. */
+/** Passo a passo e o botão que vai para a barra de favoritos, para tirar as músicas e os repertórios do Toque Fácil. */
 export function FavoritoToqueFacil() {
   const ref = useRef<HTMLAnchorElement>(null);
   // O React não aceita endereço "javascript:" no href, então ele é colocado direto no botão.
@@ -22,10 +22,15 @@ export function FavoritoToqueFacil() {
         >
           Exportar do Toque Fácil
         </a>
+        <br />
+        <small>Se você já tinha arrastado antes, arraste de novo e apague o antigo: o novo também traz os repertórios.</small>
       </li>
-      <li>Abra o site do Toque Fácil, entre na sua conta e clique em <b>Músicas</b>.</li>
+      <li>Abra o site do Toque Fácil, entre na sua conta e clique em <b>Músicas</b> (para trazer as músicas) ou em <b>Repertórios</b> (para trazer os repertórios).</li>
       <li>Clique no favorito <b>Exportar do Toque Fácil</b>. Um quadro azul no canto mostra o andamento. Com muitas músicas leva alguns minutos; não feche a aba.</li>
-      <li>No fim, ele baixa o arquivo <b>musicas-toque-facil.json</b> na pasta Downloads. Volte aqui e escolha esse arquivo no passo 2.</li>
+      <li>
+        No fim, ele baixa o arquivo <b>musicas-toque-facil.json</b> ou <b>repertorios-toque-facil.json</b> na pasta Downloads. Volte aqui e escolha esse arquivo no passo 2.
+        Importe primeiro as músicas e depois os repertórios.
+      </li>
     </ol>
   );
 }

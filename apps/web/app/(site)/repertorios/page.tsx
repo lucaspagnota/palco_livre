@@ -57,6 +57,7 @@ export default function Repertorios() {
         <Ajuda titulo="Meus repertórios">
           <ul>
             <li><b>Novo</b> abre o editor para montar a sequência de músicas de um show, missa ou ensaio.</li>
+            <li><b>Importar</b> traz os repertórios do Toque Fácil. Importe as músicas antes, pela mesma tela.</li>
             <li>Clique no título para editar. O botão escuro abre o repertório no leitor.</li>
             <li>Para a banda receber um repertório, coloque-o num grupo (menu <b>Grupos</b>). Quem está no grupo recebe o repertório e todas as músicas dele.</li>
             <li>Em &quot;Recebidos dos grupos&quot; ficam os repertórios que outras pessoas compartilharam com você. Use <b>•••</b> → Copiar para ter uma cópia sua, com as músicas.</li>
@@ -74,6 +75,7 @@ export default function Repertorios() {
           <option value="todos">Todos</option>
         </select>
         <Link href="/repertorios/editor" className="btn verde">Novo</Link>
+        <Link href="/musicas/importar" className="btn ciano">Importar</Link>
         <button type="button" className="btn vermelho" onClick={() => excluir(t.selecionadas)} disabled={!t.selecionadas.length}>Excluir</button>
       </div>
       {erro ? <div className="erro">{erro}</div> : null}

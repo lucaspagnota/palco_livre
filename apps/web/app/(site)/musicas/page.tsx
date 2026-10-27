@@ -71,7 +71,7 @@ export default function Musicas() {
         <Ajuda titulo="Minhas músicas">
           <ul>
             <li><b>Nova</b> abre o editor para cadastrar uma música.</li>
-            <li><b>Importar</b> traz várias músicas de uma vez, como as que você tem no Toque Fácil.</li>
+            <li><b>Importar</b> traz várias músicas de uma vez, como as que você tem no Toque Fácil (e depois os repertórios de lá).</li>
             <li>Clique no <b>título</b> para editar. Clique no <b>artista</b> para ver só as músicas dele.</li>
             <li>Clique no nome de uma coluna para ordenar por ela.</li>
             <li>O botão escuro abre a música no leitor, igual à tela do app.</li>
