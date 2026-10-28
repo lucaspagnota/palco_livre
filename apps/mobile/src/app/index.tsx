@@ -1,5 +1,7 @@
 // Início: o menu principal, no jeito do app do Toque Fácil.
+import Constants from 'expo-constants';
 import { router } from 'expo-router';
+import * as Updates from 'expo-updates';
 import { useEffect, useState } from 'react';
 import { Alert, BackHandler, Platform, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -25,6 +27,13 @@ export default function Inicio() {
   const { width } = useWindowDimensions();
   const agora = useRelogio();
   const largo = width >= 700;
+  // Versão nova baixada sozinha (EAS Update). Ela entra quando o app abre de novo, ou já, pelo aviso aqui
+  // no Início. Nunca no leitor, para não trocar nada no meio do show.
+  const { isUpdatePending } = Updates.useUpdates();
+  const versao = Updates.runtimeVersion || Constants.expoConfig?.version || '';
+  const atualizadoEm = !Updates.isEmbeddedLaunch && Updates.createdAt
+    ? Updates.createdAt.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+    : '';
 
   const dataBruta = agora.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
   const data = dataBruta.charAt(0).toUpperCase() + dataBruta.slice(1);
@@ -70,6 +79,13 @@ export default function Inicio() {
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: insets.bottom + 24, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
         {demo ? <Text style={s.aviso}>Modo demonstração: o app ainda não foi ligado ao banco de dados. As músicas de exemplo servem para testar o leitor e o pedal.</Text> : null}
         {!conteudo ? <Text style={[s.aviso, { backgroundColor: '#d1ecf1', color: '#0c5460' }]}>Comece em Conteúdo: entre com o mesmo e-mail e senha do site para baixar suas músicas.</Text> : null}
+        {isUpdatePending ? (
+          <Pressable onPress={() => Updates.reloadAsync()} accessibilityLabel="Atualizar o app agora">
+            <Text style={[s.aviso, { backgroundColor: '#d1e7dd', color: '#0f5132' }]}>
+              <Text style={{ fontFamily: fonte.negrito }}>Versão nova do Palco Livre pronta.</Text> Toque aqui para atualizar agora. Se preferir, ela entra sozinha da próxima vez que o app abrir.
+            </Text>
+          </Pressable>
+        ) : null}
         <View style={{ flexDirection: largo ? 'row' : 'column', flexWrap: 'wrap', gap: 12 }}>
           {itens.map(i => (
             <Pressable
@@ -92,6 +108,7 @@ export default function Inicio() {
           ))}
         </View>
         {conteudo ? <Text style={[s.suave, { textAlign: 'center', marginTop: 8 }]}>Conta: {conteudo.eu.nome || conteudo.eu.nick} ({conteudo.eu.email})</Text> : null}
+        {versao ? <Text style={[s.suave, { textAlign: 'center', fontSize: 13 }]}>Versão {versao}{atualizadoEm ? ` · atualizada em ${atualizadoEm}` : ''}</Text> : null}
       </ScrollView>
     </View>
   );

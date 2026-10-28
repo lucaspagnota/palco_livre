@@ -1,0 +1,19 @@
+# Manda as mudanças do app para os celulares a cada push na main, sem precisar de APK novo
+# (EAS Update, canal "preview", o mesmo dos APKs feitos com o perfil preview).
+# Vale para o código do app: telas, leitor, textos. Mudança nativa (biblioteca nova com parte nativa,
+# ícone, nome, permissões) precisa de APK novo: suba "version" no app.json e gere o build.
+# O APK só aceita atualização da mesma "version" (runtimeVersion: appVersion).
+name: Atualizar o app nos celulares
+
+on:
+  push:
+    branches: ['main']
+
+jobs:
+  atualizar:
+    name: Mandar a atualização
+    type: update
+    environment: preview
+    params:
+      channel: preview
+      platform: android

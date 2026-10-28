@@ -3,7 +3,15 @@
     "name": "Palco Livre",
     "slug": "palco-livre",
     "owner": "lucaspagnotas-team",
-    "version": "4.0.1",
+    "version": "4.1.0",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/7c6c0be3-afbb-458b-bea0-0431bb652b68",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
+    },
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "palcolivre",
@@ -16,7 +24,7 @@
     },
     "android": {
       "package": "app.palcolivre.leitor",
-      "versionCode": 2,
+      "versionCode": 3,
       "adaptiveIcon": {
         "backgroundColor": "#FFD23F",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

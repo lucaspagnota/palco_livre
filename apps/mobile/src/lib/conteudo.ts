@@ -6,8 +6,14 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Grupo, Musica, Perfil, Repertorio } from '@palco/cifra';
 import { DEMO_EU, DEMO_GRUPOS, DEMO_MUSICAS, DEMO_OUTROS, DEMO_REPERTORIOS } from '@palco/cifra/demo';
 
-const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const chave = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+// O banco é o mesmo do site. O endereço e a chave pública (feita para ir dentro do app) ficam aqui porque
+// as atualizações automáticas (EAS Update) não recebem o "env" do eas.json, e sem eles o app cairia no modo
+// demonstração. EXPO_PUBLIC_SUPABASE_* troca o banco; EXPO_PUBLIC_DEMO=1 força o modo demonstração (testes).
+const BANCO_URL = 'https://lcqeoyfxaveezbapaupo.supabase.co';
+const BANCO_CHAVE = 'sb_publishable_Te-BW3ZkSy5PcPddCb_XZw_Dgtjgs1A';
+const forcarDemo = process.env.EXPO_PUBLIC_DEMO === '1';
+const url = forcarDemo ? '' : process.env.EXPO_PUBLIC_SUPABASE_URL || BANCO_URL;
+const chave = forcarDemo ? '' : process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || BANCO_CHAVE;
 
 const sb: SupabaseClient | null = url && chave
   ? createClient(url, chave, { auth: { storage: localStorage, autoRefreshToken: true, persistSession: true, detectSessionInUrl: false } })

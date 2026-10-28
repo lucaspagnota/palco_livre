@@ -14,19 +14,13 @@
         "buildType": "apk",
         "image": "latest"
       },
-      "env": {
-        "EXPO_PUBLIC_SUPABASE_URL": "https://lcqeoyfxaveezbapaupo.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_Te-BW3ZkSy5PcPddCb_XZw_Dgtjgs1A"
-      }
+      "channel": "preview"
     },
     "production": {
       "android": {
         "image": "latest"
       },
-      "env": {
-        "EXPO_PUBLIC_SUPABASE_URL": "https://lcqeoyfxaveezbapaupo.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_Te-BW3ZkSy5PcPddCb_XZw_Dgtjgs1A"
-      }
+      "channel": "production"
     }
   }
 }

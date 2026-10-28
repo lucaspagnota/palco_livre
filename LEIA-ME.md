@@ -66,10 +66,10 @@ e cadastre as mesmas duas variáveis em **Settings › Environment Variables**. 
 
 ## 4. Gerar o APK do app (com pedal)
 
-1. Copie `apps/mobile/.env.example` para `apps/mobile/.env` com a mesma URL e chave (para testar no Expo Go).
-2. Preencha as mesmas duas linhas em `apps/mobile/eas.json`, no bloco `preview › env`.
-3. Crie uma conta grátis em https://expo.dev.
-4. Na pasta principal do projeto (a que tem este arquivo):
+1. O endereço e a chave pública do banco ficam em `apps/mobile/src/lib/conteudo.ts`. Para usar outro banco,
+   troque ali (ou crie `apps/mobile/.env` a partir do `.env.example`).
+2. Crie uma conta grátis em https://expo.dev.
+3. Na pasta principal do projeto (a que tem este arquivo):
 
 ```
 git init
@@ -83,6 +83,19 @@ npx eas-cli build -p android --profile preview
 Se o `git commit` pedir seu nome, rode antes `git config --global user.name "Lucas"` e `git config --global user.email "seu@email"`.
 
 O EAS monta o APK na nuvem (uns 15 minutos) e mostra um link. Abra o link no celular ou tablet e instale.
+Com o projeto ligado ao GitHub na Expo, dá para fazer o mesmo pelo botão **Build from GitHub** (pasta
+`apps/mobile`, ref `main`, perfil `preview`).
+
+### Atualização automática
+
+Depois de instalado, o app se atualiza sozinho pela internet (EAS Update): a cada push na `main`, o arquivo
+`apps/mobile/.eas/workflows/atualizar-app.yml` manda a versão nova para os celulares. O app baixa quando abre
+e troca na próxima vez que abrir, ou na hora pelo aviso verde no Início (nunca no meio do leitor).
+O número da versão e a data da última atualização aparecem no fim do Início.
+
+Só precisa de APK novo quando a mudança é nativa (biblioteca nova com parte nativa, ícone, nome, permissões).
+Nesse caso, suba `version` (e `android.versionCode`) em `apps/mobile/app.json` e gere o build: o APK só recebe
+atualizações feitas com a mesma `version`.
 
 ## 5. iPhone e iPad (sem App Store)
 
