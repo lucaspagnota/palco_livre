@@ -4,7 +4,7 @@
 import './polyfills';
 import { APARENCIA_PADRAO, TAMANHOS, estiloDaLinha, gridFor, layoutPages, molduraDeAjuste, passosDoShow, transposeKey, type PassoDoShow, type Row } from '@palco/cifra';
 import {
-  SEM_INTERNET, baixarConteudo, cifraDe, conteudoGuardado, entrar, gravarConfig, letraGuardada, letrasNoIpad, lerConfig,
+  SEM_INTERNET, baixarConteudo, cifraDe, conteudoGuardado, entrar, gravarConfig, idsComCifra, letraGuardada, letrasNoIpad, lerConfig,
   sairDaConta, sessaoGuardada, type Conteudo, type MusicaResumo, type Repertorio,
 } from './dados';
 
@@ -72,12 +72,18 @@ const musicaPorId = (id: string) => {
 type Tela = { nome: 'entrar' } | { nome: 'lista' } | { nome: 'repertorio'; id: string } | { nome: 'leitor' };
 let tela: Tela = { nome: 'entrar' };
 let aba: 'repertorios' | 'musicas' = 'repertorios';
-let busca = '';
+// Busca e filtros de cada aba, como no app do celular. Ficam guardados enquanto o app está aberto.
+const filtroMusicas = { busca: '', estilo: '', artista: '', tom: '', dono: 'todas' };
+const filtroRepertorios = { busca: '', estilo: '', dono: 'todos' };
+/** Onde a lista estava, para voltar no mesmo lugar depois de tocar. */
+const rolagem: Record<string, number> = { repertorios: 0, musicas: 0 };
 let aviso = '';
 let baixando = '';
 
 function mostrar(t: Tela) {
   if (tela.nome === 'leitor' && t.nome !== 'leitor') fecharLeitor();
+  const itens = document.getElementById('itens');
+  if (tela.nome === 'lista' && itens) rolagem[aba] = itens.scrollTop;
   tela = t;
   window.scrollTo(0, 0);
   desenhar();
@@ -148,12 +154,38 @@ function atualizar() {
   });
 }
 
+const LETRAS = ['#', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+const NOME_DONO: Record<string, string> = { todas: 'Todas', minhas: 'Minhas', recebidas: 'Da banda' };
+
+const letraDe = (titulo: string) => {
+  const l = chave(titulo.replace(/^\s+/, '').charAt(0)).toUpperCase();
+  return l >= 'A' && l <= 'Z' ? l : '#';
+};
+
+function unicos(valores: string[]) {
+  const vistos: Record<string, boolean> = {};
+  const out: string[] = [];
+  for (const v of valores) if (v && !vistos[v]) { vistos[v] = true; out.push(v); }
+  return out.sort((a, b) => (chave(a) < chave(b) ? -1 : chave(a) > chave(b) ? 1 : 0));
+}
+
+/** Caixinha de escolha (no iPad abre a roleta do próprio sistema). */
+function escolha(id: string, valor: string, opcoes: { valor: string; rotulo: string }[]) {
+  let html = '<select id="' + id + '" class="escolha' + (valor && valor !== 'todos' ? ' marcada' : '') + '">';
+  for (const o of opcoes) html += '<option value="' + esc(o.valor) + '"' + (o.valor === valor ? ' selected' : '') + '>' + esc(o.rotulo) + '</option>';
+  return html + '</select>';
+}
+
 function desenharLista() {
   const s = sessaoGuardada();
+  // Desenhando de novo a mesma aba (ex.: andamento do Atualizar): a lista fica onde estava.
+  const antes = document.getElementById('itens');
+  if (antes && antes.getAttribute('data-aba') === aba) rolagem[aba] = antes.scrollTop;
   const botoes =
     '<button class="botao claro" data-acao="atualizar"' + (baixando ? ' disabled' : '') + '>' + (baixando ? 'Baixando...' : '⟳ Atualizar') + '</button>' +
     '<button class="botao claro" data-acao="conta">Conta</button>';
-  let html = topo(botoes);
+  // A tela inteira fica parada e só a lista rola, com as letras de A a Z ao lado (como no celular).
+  let html = '<div class="lista-tela"><div class="lista-cabeca">' + topo(botoes);
   html += '<div class="abas">' +
     '<button class="aba' + (aba === 'repertorios' ? ' ativa' : '') + '" data-acao="aba-repertorios">Repertórios</button>' +
     '<button class="aba' + (aba === 'musicas' ? ' ativa' : '') + '" data-acao="aba-musicas">Músicas</button>' +
@@ -163,23 +195,82 @@ function desenharLista() {
       conteudo ? 'Atualizado em ' + quando(conteudo.baixadoEm) + ' · ' + letrasNoIpad() + ' cifras guardadas no iPad' : 'Toque em Atualizar para baixar suas músicas.') +
     '</div>';
   if (aviso) html += '<div class="aviso">' + esc(aviso) + (!s || /Entre de novo/.test(aviso) ? ' <button class="botao pequeno" data-acao="reentrar">Entrar</button>' : '') + '</div>';
-  html += '<div class="busca"><input id="busca" type="search" placeholder="Buscar ' + (aba === 'repertorios' ? 'repertório' : 'música ou artista') + '" value="' + esc(busca) + '" autocorrect="off"></div>';
-  html += '<div id="itens"></div>';
+
+  html += '<div class="filtros">';
+  if (aba === 'musicas') {
+    const f = filtroMusicas;
+    const ms = conteudo ? conteudo.musicas : [];
+    const op = (lista: string[], todos: string) => [{ valor: '', rotulo: todos }].concat(lista.map(v => ({ valor: v, rotulo: v })));
+    html += '<input id="busca" type="search" placeholder="Título ou artista" value="' + esc(f.busca) + '" autocorrect="off" autocapitalize="off">' +
+      '<div class="filtros-linha">' +
+      escolha('f-estilo', f.estilo, op(unicos(ms.map(m => m.estilo)), 'Estilo')) +
+      escolha('f-artista', f.artista, op(unicos(ms.map(m => m.artista)), 'Artista')) +
+      escolha('f-tom', f.tom, op(unicos(ms.map(m => m.tom)), 'Tom')) +
+      '</div><div class="chips">';
+    for (const d of ['todas', 'minhas', 'recebidas']) html += '<button class="chip' + (f.dono === d ? ' ativa' : '') + '" data-acao="dono" data-id="' + d + '">' + NOME_DONO[d] + '</button>';
+    html += '</div>';
+  } else {
+    const f = filtroRepertorios;
+    const estilos = unicos(conteudo ? conteudo.repertorios.map(r => r.estilo) : []);
+    html += '<input id="busca" type="search" placeholder="Título" value="' + esc(f.busca) + '" autocorrect="off" autocapitalize="off">' +
+      '<div class="filtros-linha">' +
+      escolha('f-estilo', f.estilo, [{ valor: '', rotulo: 'Todos os estilos' }].concat(estilos.map(v => ({ valor: v, rotulo: v })))) +
+      escolha('f-dono', f.dono, [{ valor: 'todos', rotulo: 'Todos' }, { valor: 'meus', rotulo: 'Meus repertórios' }, { valor: 'recebidos', rotulo: 'Recebidos da banda' }]) +
+      '</div>';
+  }
+  html += '</div></div><div class="lista-corpo">';
+  if (aba === 'musicas') {
+    html += '<div class="indice" id="indice">';
+    for (const l of LETRAS) html += '<div class="indice-letra" data-letra="' + l + '">' + l + '</div>';
+    html += '</div>';
+  }
+  html += '<div id="itens" class="itens" data-aba="' + aba + '"></div></div></div>';
   app.innerHTML = html;
   desenharItens();
+  const itens = document.getElementById('itens') as HTMLElement;
+  itens.scrollTop = rolagem[aba] || 0;
+
   const b = document.getElementById('busca') as HTMLInputElement;
-  b.addEventListener('input', () => { busca = b.value; desenharItens(); });
+  let espera = 0;
+  b.addEventListener('input', () => {
+    // Espera parar de digitar: redesenhar centenas de músicas a cada letra deixa o iPad 2 lento.
+    clearTimeout(espera);
+    espera = setTimeout(() => { filtro().busca = b.value; filtrou(); }, 250) as unknown as number;
+  });
+  // "Buscar" no teclado fecha o teclado.
+  b.addEventListener('keydown', e => { if ((e as KeyboardEvent).keyCode === 13) b.blur(); });
+  const ligar = (id: string, campo: string) => {
+    const el = document.getElementById(id) as HTMLSelectElement | null;
+    if (el) el.addEventListener('change', () => { (filtro() as Record<string, string>)[campo] = el.value; el.className = 'escolha' + (el.value && el.value !== 'todos' ? ' marcada' : ''); filtrou(); });
+  };
+  ligar('f-estilo', 'estilo');
+  ligar('f-artista', 'artista');
+  ligar('f-tom', 'tom');
+  ligar('f-dono', 'dono');
+  ligarIndice();
+}
+
+const filtro = () => (aba === 'musicas' ? filtroMusicas : filtroRepertorios);
+
+/** Mudou a busca ou um filtro: lista de novo, do começo. */
+function filtrou() {
+  desenharItens();
+  const itens = document.getElementById('itens');
+  if (itens) itens.scrollTop = 0;
 }
 
 function desenharItens() {
   const lugar = document.getElementById('itens');
   if (!lugar) return;
-  const b = chave(busca.trim());
   const eu = sessaoGuardada()?.euId;
   let html = '';
-  if (!conteudo) { lugar.innerHTML = ''; return; }
+  if (!conteudo) { lugar.innerHTML = '<p class="vazio">Toque em Atualizar para baixar suas músicas.</p>'; return; }
   if (aba === 'repertorios') {
-    const lista = conteudo.repertorios.slice().sort(porTitulo).filter(r => !b || chave(r.titulo).indexOf(b) >= 0);
+    const f = filtroRepertorios;
+    const b = chave(f.busca.trim());
+    const lista = conteudo.repertorios.slice().sort(porTitulo).filter(r =>
+      (!b || chave(r.titulo).indexOf(b) >= 0) && (!f.estilo || r.estilo === f.estilo)
+      && (f.dono === 'todos' || (f.dono === 'meus') === (r.donoId === eu)));
     for (const r of lista) {
       const n = r.itens.filter(i => i.musicaId).length;
       const deOutro = r.donoId !== eu;
@@ -189,21 +280,65 @@ function desenharItens() {
         '<button class="play" data-acao="tocar-rep" data-id="' + esc(r.id) + '" aria-label="Tocar"><i class="tri"></i></button>' +
         '</div>';
     }
-    if (!lista.length) html = '<p class="vazio">Nenhum repertório' + (b ? ' com essa busca' : '') + '.</p>';
+    html += lista.length ? '<p class="conta-lista">' + lista.length + (lista.length === 1 ? ' repertório' : ' repertórios') + '</p>'
+      : '<p class="vazio">Nenhum repertório com esses filtros.</p>';
   } else {
-    const lista = conteudo.musicas.slice().sort(porTitulo).filter(m => !b || chave(m.titulo + ' ' + m.artista).indexOf(b) >= 0);
-    // Até 300 de cada vez: o iPad 2 fica lento com listas enormes.
-    for (const m of lista.slice(0, 300)) {
-      const guardada = letraGuardada(m.id) !== null;
+    const f = filtroMusicas;
+    const b = chave(f.busca.trim());
+    const lista = conteudo.musicas.slice().sort(porTitulo).filter(m =>
+      (!b || chave(m.titulo + ' ' + m.artista).indexOf(b) >= 0)
+      && (!f.estilo || m.estilo === f.estilo) && (!f.artista || m.artista === f.artista) && (!f.tom || m.tom === f.tom)
+      && (f.dono === 'todas' || (f.dono === 'minhas') === (m.donoId === eu)));
+    const guardadas = idsComCifra();
+    let letra = '';
+    const comMusica: Record<string, boolean> = {};
+    for (const m of lista) {
+      const l = letraDe(m.titulo);
+      if (l !== letra) { letra = l; comMusica[l] = true; html += '<div class="letra" id="letra-' + (l === '#' ? 'num' : l) + '">' + l + '</div>'; }
+      const info = [m.artista, m.tom ? 'Tom ' + m.tom : '', m.capo ? 'Capo ' + m.capo + 'ª' : '', m.donoId !== eu ? 'da banda' : ''].filter(Boolean).join(' · ');
       html += '<div class="item">' +
         '<button class="item-texto" data-acao="tocar-musica" data-id="' + esc(m.id) + '"><b>' + esc(m.titulo) + '</b><span>' +
-        esc([m.artista, m.tom ? 'Tom ' + m.tom : ''].filter(Boolean).join(' · ')) + (guardada ? '' : ' · <i>precisa de internet</i>') + '</span></button>' +
+        esc(info) + (guardadas[m.id] ? '' : ' · <i>precisa de internet</i>') + '</span></button>' +
+        '<button class="play escuro" data-acao="tocar-musica" data-id="' + esc(m.id) + '" aria-label="Tocar"><i class="tri"></i></button>' +
         '</div>';
     }
-    if (lista.length > 300) html += '<p class="vazio">Mais ' + (lista.length - 300) + ' músicas. Use a busca para achar.</p>';
-    if (!lista.length) html = '<p class="vazio">Nenhuma música' + (b ? ' com essa busca' : '') + '.</p>';
+    html += lista.length ? '<p class="conta-lista">' + lista.length + (lista.length === 1 ? ' música' : ' músicas') + '</p>'
+      : '<p class="vazio">Nenhuma música com esses filtros.</p>';
+    // Letras sem música ficam apagadas no índice.
+    const letras = document.querySelectorAll('.indice-letra');
+    for (let i = 0; i < letras.length; i++) {
+      const el = letras[i] as HTMLElement;
+      el.className = 'indice-letra' + (comMusica[el.getAttribute('data-letra') || ''] ? '' : ' sem');
+    }
   }
   lugar.innerHTML = html;
+}
+
+/** Índice de A a Z: tocar ou deslizar o dedo leva às músicas daquela letra (ou da próxima que tiver). */
+function ligarIndice() {
+  const indice = document.getElementById('indice');
+  const itens = document.getElementById('itens');
+  if (!indice || !itens) return;
+  let marcada: HTMLElement | null = null;
+  const ir = (y: number) => {
+    const r = indice.getBoundingClientRect();
+    const n = Math.max(0, Math.min(LETRAS.length - 1, Math.floor(((y - r.top) / r.height) * LETRAS.length)));
+    let alvo: HTMLElement | null = null;
+    for (let i = n; i < LETRAS.length && !alvo; i++) alvo = document.getElementById('letra-' + (LETRAS[i] === '#' ? 'num' : LETRAS[i]));
+    for (let i = n - 1; i >= 0 && !alvo; i--) alvo = document.getElementById('letra-' + (LETRAS[i] === '#' ? 'num' : LETRAS[i]));
+    if (alvo) itens.scrollTop = alvo.offsetTop;
+    const el = indice.children[n] as HTMLElement;
+    if (el !== marcada) {
+      if (marcada) marcada.className = marcada.className.replace(' tocada', '');
+      marcada = el;
+      el.className += ' tocada';
+    }
+  };
+  const soltar = () => { if (marcada) marcada.className = marcada.className.replace(' tocada', ''); marcada = null; };
+  indice.addEventListener('touchstart', (e: Event) => { e.preventDefault(); ir((e as TouchEvent).touches[0].clientY); }, false);
+  indice.addEventListener('touchmove', (e: Event) => { e.preventDefault(); ir((e as TouchEvent).touches[0].clientY); }, false);
+  indice.addEventListener('touchend', soltar, false);
+  indice.addEventListener('mousedown', (e: MouseEvent) => { ir(e.clientY); setTimeout(soltar, 300); }, false);
 }
 
 function desenharRepertorio(id: string) {
@@ -233,10 +368,19 @@ app.addEventListener('click', e => {
   let el = e.target as HTMLElement | null;
   while (el && el !== app && !el.getAttribute('data-acao')) el = el.parentElement;
   if (!el || el === app) return;
+  // Guarda onde a lista estava antes de abrir um repertório ou o leitor.
+  const itensEl = document.getElementById('itens');
+  if (tela.nome === 'lista' && itensEl && itensEl.getAttribute('data-aba') === aba) rolagem[aba] = itensEl.scrollTop;
   const acao = el.getAttribute('data-acao');
   const id = el.getAttribute('data-id') || '';
   if (acao === 'atualizar') atualizar();
-  else if (acao === 'aba-repertorios' || acao === 'aba-musicas') { aba = acao === 'aba-musicas' ? 'musicas' : 'repertorios'; busca = ''; desenhar(); }
+  else if (acao === 'aba-repertorios' || acao === 'aba-musicas') {
+    const itens = document.getElementById('itens');
+    if (itens) rolagem[aba] = itens.scrollTop;
+    aba = acao === 'aba-musicas' ? 'musicas' : 'repertorios';
+    desenhar();
+  }
+  else if (acao === 'dono') { filtroMusicas.dono = id; desenharLista(); filtrou(); }
   else if (acao === 'abrir-rep') mostrar({ nome: 'repertorio', id });
   else if (acao === 'voltar') mostrar({ nome: 'lista' });
   else if (acao === 'tocar-rep') tocarRepertorio(id, Number(el.getAttribute('data-inicio')) || 0);

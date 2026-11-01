@@ -112,6 +112,16 @@ export function letraGuardada(id: string): string | null {
   return l ? l.t : null;
 }
 
+/** Ids das músicas que já têm a cifra no iPad (só olha os nomes guardados, sem abrir as cifras). */
+export function idsComCifra(): Record<string, boolean> {
+  const ids: Record<string, boolean> = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.indexOf(PREFIXO_LETRA) === 0) ids[k.slice(PREFIXO_LETRA.length)] = true;
+  }
+  return ids;
+}
+
 /** Quantas cifras completas estão no iPad. */
 export function letrasNoIpad(): number {
   let n = 0;
