@@ -180,6 +180,7 @@ function Leitor() {
 
   const a = prefs.aparencia;
   const verde = '#ff8a3d';
+  const redondo: React.CSSProperties = { width: 40, height: 40, borderRadius: 20, border: 'none', background: '#2fb344', color: '#fff', fontSize: 26, fontWeight: 700, lineHeight: '38px', cursor: 'pointer', padding: 0 };
 
   if (!pronto || !dados) return <div style={{ background: '#000', color: '#999', height: '100vh', padding: 30 }}>Carregando…</div>;
 
@@ -198,8 +199,8 @@ function Leitor() {
     <div style={{ position: 'fixed', inset: 0, background: a.fundo, display: 'flex', flexDirection: 'column', userSelect: 'none', WebkitUserSelect: 'none', touchAction: 'manipulation', fontFamily: 'var(--ui)' }}>
       <div style={{ display: 'flex', alignItems: 'center', borderBottom: '2px solid #2f4f4f', cursor: 'pointer', padding: '2px 8px 4px' }}>
         <div style={{ flex: 3, minWidth: 0 }} onClick={anterior} title="Música anterior">
-          <div style={{ color: verde, fontWeight: 900, fontSize: 19, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{musica?.titulo.toUpperCase() ?? '…'}</div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 24, color: verde, fontWeight: 700, fontSize: 15, whiteSpace: 'nowrap' }}>
+          <div style={{ color: verde, fontWeight: 900, fontSize: 19, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ajustando ? 'AJUSTES DE RESOLUÇÃO' : musica?.titulo.toUpperCase() ?? '…'}</div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 24, color: verde, fontWeight: 700, fontSize: 15, whiteSpace: 'nowrap', visibility: ajustando ? 'hidden' : undefined }}>
             {musica?.artista ? <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{musica.artista}</span> : null}
             {tom ? <span style={{ fontWeight: 900, fontSize: 16 }}>Tom: {tom}</span> : null}
             {musica?.capo ? <span>Capo {musica.capo}ª</span> : null}
@@ -231,22 +232,22 @@ function Leitor() {
         )}
         {ajustando ? (
           <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', pointerEvents: 'none' }}>
-            <div style={{ pointerEvents: 'auto', background: '#1b1d1f', color: '#fff', border: `2px solid ${verde}`, borderRadius: 16, padding: 18, width: 380, maxWidth: '90%', display: 'grid', gap: 12 }}>
-              <strong style={{ fontSize: 19 }}>Ajustes de resolução</strong>
-              <span style={{ color: '#bbb' }}>Mude a largura e a altura até a moldura de X ocupar toda a área da letra cifrada.</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ flex: 1 }}>Largura: <b>{grade.cols}</b> caracteres</span>
-                <button className="btn verde pq" onClick={() => mudar({ ajusteCols: prefs.ajusteCols - 1 })} aria-label="Menos caracteres">−</button>
-                <button className="btn verde pq" onClick={() => mudar({ ajusteCols: prefs.ajusteCols + 1 })} aria-label="Mais caracteres">+</button>
+            {/* Igual à caixinha do Toque Fácil: a moldura de X atrás cresce ou encolhe a cada toque. */}
+            <div style={{ pointerEvents: 'auto', background: '#fff', color: '#222', borderRadius: 6, padding: '16px 18px', width: 300, maxWidth: '90%', display: 'grid', gap: 12, textAlign: 'center' }}>
+              <span style={{ color: '#555', lineHeight: 1.4 }}>Altere o tamanho do marcador até abranger toda a área disponível para a letra cifrada.</span>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <button style={redondo} onClick={() => mudar({ ajusteCols: prefs.ajusteCols - 1 })} aria-label="Diminuir largura">−</button>
+                <span style={{ flex: 1, fontSize: 17 }}>Largura</span>
+                <button style={redondo} onClick={() => mudar({ ajusteCols: prefs.ajusteCols + 1 })} aria-label="Aumentar largura">+</button>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ flex: 1 }}>Altura: <b>{grade.rows}</b> linhas</span>
-                <button className="btn verde pq" onClick={() => mudar({ ajusteLinhas: prefs.ajusteLinhas - 1 })} aria-label="Menos linhas">−</button>
-                <button className="btn verde pq" onClick={() => mudar({ ajusteLinhas: prefs.ajusteLinhas + 1 })} aria-label="Mais linhas">+</button>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <button style={redondo} onClick={() => mudar({ ajusteLinhas: prefs.ajusteLinhas - 1 })} aria-label="Diminuir altura">−</button>
+                <span style={{ flex: 1, fontSize: 17 }}>Altura</span>
+                <button style={redondo} onClick={() => mudar({ ajusteLinhas: prefs.ajusteLinhas + 1 })} aria-label="Aumentar altura">+</button>
               </div>
-              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                <button className="btn escuro" onClick={() => mudar({ ajusteCols: 0, ajusteLinhas: 0 })}>Padrão</button>
-                <button className="btn laranja-claro" onClick={() => setAjustando(false)}>Ok</button>
+              <div style={{ display: 'flex', gap: 14, justifyContent: 'center', alignItems: 'center' }}>
+                <button style={{ border: 'none', background: 'none', color: '#888', cursor: 'pointer', fontSize: 14 }} onClick={() => mudar({ ajusteCols: 0, ajusteLinhas: 0 })}>Padrão</button>
+                <button style={{ border: '1.5px solid #2fb344', background: 'none', color: '#2fb344', borderRadius: 18, padding: '5px 30px', fontWeight: 700, fontSize: 16, cursor: 'pointer' }} onClick={() => setAjustando(false)}>Ok</button>
               </div>
             </div>
           </div>

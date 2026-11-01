@@ -382,8 +382,9 @@ function desenharPagina(grade: ReturnType<typeof gridFor>, largura: number, recu
 
   // Barra de cima: título (volta música), o que vem depois (pausa, bloco) e a próxima música.
   (document.getElementById('l-ant') as HTMLElement).innerHTML =
-    '<div class="l-titulo">' + esc(m.titulo.toUpperCase()) + '</div>' +
-    '<div class="l-sub">' + (m.artista ? '<span>' + esc(m.artista) + '</span>' : '') + (tom ? '<b>Tom: ' + esc(tom) + '</b>' : '') +
+    '<div class="l-titulo">' + (L.ajustando ? 'AJUSTES DE RESOLUÇÃO' : esc(m.titulo.toUpperCase())) + '</div>' +
+    // No ajuste a barra fica da mesma altura (o texto só fica invisível), para a área da cifra ser a mesma.
+    '<div class="l-sub"' + (L.ajustando ? ' style="visibility:hidden"' : '') + '>' + (m.artista ? '<span>' + esc(m.artista) + '</span>' : '') + (tom ? '<b>Tom: ' + esc(tom) + '</b>' : '') +
     (m.capo ? '<span>Capo ' + m.capo + 'ª</span>' : '') + '</div>';
   const proxima = L.faixas[L.atual + 1];
   const pausa = f.passo && f.passo.pausaDepois;
@@ -517,16 +518,15 @@ function desenharAjuste() {
   const lugar = document.getElementById('l-modal');
   if (!L || !lugar) return;
   if (!L.ajustando) { lugar.innerHTML = ''; return; }
-  const g = ultimaGrade ? ultimaGrade.grade : { cols: 0, rows: 0 };
+  // Igual à caixinha do Toque Fácil: a moldura de X atrás cresce ou encolhe a cada toque.
   lugar.innerHTML =
     '<div class="aj-caixa">' +
-    '<h2>Ajustes de resolução (' + (L.paisagem ? 'deitado' : 'em pé') + ')</h2>' +
-    '<p>Mude a largura e a altura até a moldura de X ocupar toda a área da letra cifrada.</p>' +
-    '<div class="o-linha"><span>Largura: <b>' + g.cols + '</b> caracteres</span>' +
-    '<button class="o-redondo" data-o="aj-cols-" aria-label="Menos caracteres">−</button><button class="o-redondo" data-o="aj-cols+" aria-label="Mais caracteres">+</button></div>' +
-    '<div class="o-linha"><span>Altura: <b>' + g.rows + '</b> linhas</span>' +
-    '<button class="o-redondo" data-o="aj-rows-" aria-label="Menos linhas">−</button><button class="o-redondo" data-o="aj-rows+" aria-label="Mais linhas">+</button></div>' +
-    '<div class="o-botoes"><button class="botao escuro" data-o="aj-padrao">Padrão</button><button class="botao" data-o="aj-ok">Ok</button></div>' +
+    '<p>Altere o tamanho do marcador até abranger toda a área disponível para a letra cifrada.</p>' +
+    '<div class="aj-linha"><button class="o-redondo" data-o="aj-cols-" aria-label="Diminuir largura">−</button><span>Largura</span>' +
+    '<button class="o-redondo" data-o="aj-cols+" aria-label="Aumentar largura">+</button></div>' +
+    '<div class="aj-linha"><button class="o-redondo" data-o="aj-rows-" aria-label="Diminuir altura">−</button><span>Altura</span>' +
+    '<button class="o-redondo" data-o="aj-rows+" aria-label="Aumentar altura">+</button></div>' +
+    '<div class="aj-botoes"><button class="aj-padrao" data-o="aj-padrao">Padrão</button><button class="aj-ok" data-o="aj-ok">Ok</button></div>' +
     '</div>';
 }
 

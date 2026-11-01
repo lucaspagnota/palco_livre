@@ -190,9 +190,10 @@ function Painel() {
       <StatusBar hidden />
       {musica ? (
       <View style={{ flexDirection: 'row', alignItems: 'center', borderBottomWidth: 2, borderBottomColor: '#2f4f4f', paddingTop: insets.top + 2, paddingHorizontal: MARGEM, paddingBottom: 4 }}>
-        <Pressable style={{ flex: 3, minWidth: 0 }} onPress={() => irPara(atual - 1)} focusable={false} accessibilityLabel="Música anterior">
-          <Text numberOfLines={1} style={{ color: corTopo, fontFamily: fonte.negrito, fontSize: tablet ? 22 : 18 }}>{musica.titulo.toUpperCase()}</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+        <Pressable style={{ flex: 3, minWidth: 0 }} onPress={() => { if (!ajustando) irPara(atual - 1); }} focusable={false} accessibilityLabel="Música anterior">
+          <Text numberOfLines={1} style={{ color: corTopo, fontFamily: fonte.negrito, fontSize: tablet ? 22 : 18 }}>{ajustando ? 'AJUSTES DE RESOLUÇÃO' : musica.titulo.toUpperCase()}</Text>
+          {/* No ajuste a barra continua da mesma altura (só some o texto), para a área da cifra ser a mesma. */}
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', opacity: ajustando ? 0 : 1 }}>
             <Text numberOfLines={1} style={{ flexShrink: 1, color: corTopo, fontFamily: fonte.media, fontSize: tablet ? 16 : 14 }}>{musica.artista}</Text>
             {tom ? <Text numberOfLines={1} style={{ flexShrink: 0, marginLeft: musica.artista ? 24 : 0, color: corTopo, fontFamily: fonte.negrito, fontSize: tablet ? 17 : 15 }}>Tom: {tom}</Text> : null}
             {musica.capo ? <Text style={{ marginLeft: 24, color: corTopo, fontFamily: fonte.media, fontSize: tablet ? 16 : 14 }}>Capo {musica.capo}ª</Text> : null}
@@ -208,7 +209,7 @@ function Painel() {
             {blocoSeguinte ? <Text numberOfLines={1} style={{ color: '#8ce99a', fontFamily: fonte.negrito, fontSize: tablet ? 16 : 13 }}>▸ {blocoSeguinte.toUpperCase()}</Text> : null}
           </View>
         ) : null}
-        <Pressable style={{ alignItems: 'flex-end', maxWidth: '40%', paddingLeft: 10 }} onPress={() => irPara(atual + 1)} focusable={false} accessibilityLabel="Próxima música">
+        <Pressable style={{ alignItems: 'flex-end', maxWidth: '40%', paddingLeft: 10 }} onPress={() => { if (!ajustando) irPara(atual + 1); }} focusable={false} accessibilityLabel="Próxima música">
           <Text style={{ color: '#bbb', fontFamily: fonte.negrito, fontSize: tablet ? 18 : 15 }}>
             ♫ {atual + 1}/{musicas.length}{config.modo === 'paginacao' ? `   ▤ ${Math.min(Math.floor(pagina / porVez) + 1, Math.max(1, Math.ceil(total / porVez)))}/${Math.max(1, Math.ceil(total / porVez))}` : ''}
           </Text>
@@ -216,8 +217,10 @@ function Painel() {
         </Pressable>
       </View>
       ) : (
-        <View style={{ borderBottomWidth: 2, borderBottomColor: '#2f4f4f', paddingTop: insets.top + 2, paddingHorizontal: MARGEM, paddingBottom: 6 }}>
+        <View style={{ borderBottomWidth: 2, borderBottomColor: '#2f4f4f', paddingTop: insets.top + 2, paddingHorizontal: MARGEM, paddingBottom: 4 }}>
           <Text style={{ color: corTopo, fontFamily: fonte.negrito, fontSize: tablet ? 22 : 18 }}>AJUSTES DE RESOLUÇÃO</Text>
+          {/* Mesma altura da barra com a música (título + artista), para o ajuste valer igual no leitor. */}
+          <Text style={{ fontFamily: fonte.media, fontSize: tablet ? 16 : 14 }}> </Text>
         </View>
       )}
 
@@ -297,9 +300,6 @@ function Painel() {
 
       {ajustando ? (
         <AjusteResolucao
-          cols={grade.cols}
-          rows={grade.rows}
-          paisagem={paisagem}
           aoMudar={mudarAjuste}
           aoPadrao={() => mudarConfig(paisagem ? { paisagem: { cols: 0, rows: 0 } } : { retrato: { cols: 0, rows: 0 } })}
           aoFechar={fecharAjuste}
@@ -353,26 +353,32 @@ function Painel() {
 }
 
 /** Caixa do "Ajustes de resolução", por cima da moldura de X. Vale para o modo em que o aparelho está (em pé ou deitado). */
-function AjusteResolucao({ cols, rows, paisagem, aoMudar, aoPadrao, aoFechar }: {
-  cols: number; rows: number; paisagem: boolean;
+function AjusteResolucao({ aoMudar, aoPadrao, aoFechar }: {
   aoMudar: (campo: 'cols' | 'rows', d: number) => void; aoPadrao: () => void; aoFechar: () => void;
 }) {
+  // Igual à caixinha do Toque Fácil: a moldura de X atrás cresce ou encolhe a cada toque.
+  const linha = (rotulo: string, campo: 'cols' | 'rows', menos: string, mais: string) => (
+    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+      <Redondo icone="menos" onPress={() => aoMudar(campo, -1)} rotulo={menos} />
+      <Text style={{ flex: 1, textAlign: 'center', color: '#222', fontFamily: fonte.media, fontSize: 17 }}>{rotulo}</Text>
+      <Redondo icone="mais" onPress={() => aoMudar(campo, 1)} rotulo={mais} />
+    </View>
+  );
   return (
-    <View pointerEvents="box-none" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <View style={[s.modal, { padding: 18, gap: 14, width: 340, maxWidth: '100%' }]}>
-        <Text style={[s.tituloModal, { padding: 0 }]}>Ajustes de resolução ({paisagem ? 'deitado' : 'em pé'})</Text>
-        <Text style={s.suave}>Mude a largura e a altura até a moldura de X ocupar toda a área da letra cifrada.</Text>
-        <LinhaOpcao rotulo={`Largura: ${cols} caracteres`}>
-          <Redondo icone="menos" onPress={() => aoMudar('cols', -1)} rotulo="Menos caracteres" />
-          <Redondo icone="mais" onPress={() => aoMudar('cols', 1)} rotulo="Mais caracteres" />
-        </LinhaOpcao>
-        <LinhaOpcao rotulo={`Altura: ${rows} linhas`}>
-          <Redondo icone="menos" onPress={() => aoMudar('rows', -1)} rotulo="Menos linhas" />
-          <Redondo icone="mais" onPress={() => aoMudar('rows', 1)} rotulo="Mais linhas" />
-        </LinhaOpcao>
-        <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'flex-end' }}>
-          <Botao rotulo="Padrão" tipo="escuro" pequeno onPress={aoPadrao} />
-          <Botao rotulo="Ok" pequeno onPress={aoFechar} />
+    <View pointerEvents="box-none" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', padding: 40 }}>
+      <View style={{ backgroundColor: '#fff', borderRadius: 6, paddingVertical: 16, paddingHorizontal: 18, gap: 12, width: 290, maxWidth: '100%' }}>
+        <Text style={{ textAlign: 'center', color: '#555', fontFamily: fonte.normal, fontSize: 15, lineHeight: 21 }}>
+          Altere o tamanho do marcador até abranger toda a área disponível para a letra cifrada.
+        </Text>
+        {linha('Largura', 'cols', 'Diminuir largura', 'Aumentar largura')}
+        {linha('Altura', 'rows', 'Diminuir altura', 'Aumentar altura')}
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
+          <Pressable onPress={aoPadrao} accessibilityLabel="Voltar ao padrão" style={{ paddingHorizontal: 10, paddingVertical: 6 }}>
+            <Text style={{ color: '#888', fontFamily: fonte.media, fontSize: 14 }}>Padrão</Text>
+          </Pressable>
+          <Pressable onPress={aoFechar} accessibilityLabel="Ok" style={({ pressed }) => ({ borderWidth: 1.5, borderColor: cor.verde, borderRadius: 18, paddingHorizontal: 30, paddingVertical: 6, opacity: pressed ? 0.6 : 1 })}>
+            <Text style={{ color: cor.verde, fontFamily: fonte.negrito, fontSize: 16 }}>Ok</Text>
+          </Pressable>
         </View>
       </View>
     </View>
