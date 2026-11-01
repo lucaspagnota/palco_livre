@@ -37,15 +37,14 @@ h1 { font-size: 26px; margin: 0 0 6px; }
 .lista-cabeca { -webkit-flex-shrink: 0; flex-shrink: 0; }
 .lista-corpo { -webkit-flex: 1; flex: 1; min-height: 0; display: -webkit-flex; display: flex; position: relative; }
 .itens { -webkit-flex: 1; flex: 1; min-width: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; position: relative; }
-.filtros { padding: 12px 16px; background: #f4f5f7; border-bottom: 1px solid #e3e6ea; }
-.filtros input { display: block; width: 100%; padding: 11px 14px; border: 1px solid #c9ced6; background: #fff; font-size: 18px; }
-.filtros-linha { display: -webkit-flex; display: flex; margin-top: 10px; }
-.escolha { -webkit-flex: 1; flex: 1; min-width: 0; margin-left: 10px; height: 46px; padding: 0 34px 0 14px; font: inherit; font-size: 17px; color: #1b1d1f; border: 1px solid #c9ced6; border-radius: 10px; -webkit-appearance: none;
-  background: #fff url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%236b7280' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 12px center; }
-.escolha:first-child { margin-left: 0; }
+.filtros { padding: 10px 16px; background: #f4f5f7; border-bottom: 1px solid #e3e6ea; }
+.filtros-linha { display: -webkit-flex; display: flex; }
+.filtros input { -webkit-flex: 2; flex: 2; min-width: 0; height: 42px; padding: 0 12px; border: 1px solid #c9ced6; background: #fff; font-size: 16px; }
+.escolha { -webkit-flex: 1; flex: 1; min-width: 0; margin-left: 8px; height: 42px; padding: 0 28px 0 10px; font: inherit; font-size: 16px; color: #1b1d1f; border: 1px solid #c9ced6; border-radius: 10px; -webkit-appearance: none;
+  background: #fff url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%236b7280' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 9px center; }
 .escolha.marcada { border-color: #ff7a45; background-color: #fff4ee; font-weight: bold; }
-.chips { margin-top: 10px; }
-.chip { display: inline-block; padding: 7px 18px; margin-right: 8px; border: 1px solid #c9ced6; border-radius: 18px; background: #fff; font-size: 17px; }
+.chips { margin-top: 8px; }
+.chip { display: inline-block; padding: 5px 16px; margin-right: 8px; border: 1px solid #c9ced6; border-radius: 16px; background: #fff; font-size: 16px; }
 .chip.ativa { background: #ff7a45; border-color: #ff7a45; color: #1b1d1f; font-weight: bold; }
 .indice { width: 44px; -webkit-flex-shrink: 0; flex-shrink: 0; display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; background: #fff; border-right: 1px solid #e3e6ea; padding: 4px 0; }
 .indice-letra { -webkit-flex: 1; flex: 1; display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-justify-content: center; justify-content: center; font-weight: bold; font-size: 15px; color: #e8590c; }
