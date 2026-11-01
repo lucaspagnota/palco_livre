@@ -12,6 +12,13 @@
     "build:web": "npm run build --workspace @palco/web",
     "instalar:app": "npm --prefix apps/mobile install",
     "dev:app": "npm --prefix apps/mobile run start",
-    "build:index": "vite build --config apps/web/spa/vite.config.mjs && node apps/web/spa/montar.mjs"
+    "build:index": "vite build --config apps/web/spa/vite.config.mjs && node apps/web/spa/montar.mjs",
+    "build:ipad": "node apps/web/ipad/montar.mjs"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.28.4",
+    "@babel/preset-env": "^7.28.3",
+    "acorn": "^8.15.0",
+    "esbuild": "^0.27.2"
   }
 }
