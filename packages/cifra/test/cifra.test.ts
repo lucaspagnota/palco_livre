@@ -39,6 +39,19 @@ Segunda voz
     expect(isTabLine('| G | D |')).toBe(false);
   });
 
+  it('reconhece "Intro:" com acordes, sem colchete', () => {
+    const kinds = (t: string) => readSource(t).map(l => l.kind);
+    expect(kinds('Intro: Am  F  C  G  C  G')).toEqual(['labelChords']);
+    expect(kinds('Solo Am  G  F')).toEqual(['labelChords']);
+    expect(kinds('Primeira Parte:')).toEqual(['label']);
+    // Continua texto: o tom escrito na letra, frase com dois-pontos e palavra comum seguida de letra.
+    expect(kinds('Tom: C')).toEqual(['lyric']);
+    expect(kinds('Ele disse: vem cá')).toEqual(['lyric']);
+    expect(kinds('Base de tudo é você')).toEqual(['lyric']);
+    expect(transposeSource('Intro: Am  F  C  G\nTom: C', 2)).toBe('Intro: Bm  G  D  A\nTom: C');
+    expect(listChords('Intro: Am F C G')).toEqual(['Am', 'F', 'C', 'G']);
+  });
+
   it('lista os acordes sem repetir', () => {
     expect(listChords('[Intro] C Am7 G\nC  F9\nletra\n( C  G )')).toEqual(['C', 'Am7', 'G', 'F9']);
   });
