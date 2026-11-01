@@ -114,8 +114,13 @@ h1 { font-size: 26px; margin: 0 0 6px; }
 .i-caixa .tri { font-size: 30px; }
 
 /* Ajustes de resolução: caixa no meio, sem escurecer a moldura de X */
-.aj-caixa { position: fixed; top: 50%; left: 50%; width: 380px; margin-left: -190px; margin-top: -150px; z-index: 20; background: #1b1d1f; color: #fff; border: 2px solid #ff7a45; border-radius: 16px; padding: 18px; }
-.aj-caixa h2 { margin: 0 0 8px; font-size: 20px; }
-.aj-caixa p { margin: 0 0 14px; color: #bbb; font-size: 16px; }
+.aj-caixa { position: fixed; top: 50%; left: 50%; width: 330px; margin-left: -165px; margin-top: -130px; z-index: 20; background: #fff; color: #222; border-radius: 6px; padding: 16px 18px; text-align: center; }
+.aj-caixa p { margin: 0 0 12px; color: #555; font-size: 16px; line-height: 1.4; }
+.aj-linha { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; margin-bottom: 10px; }
+.aj-linha span { -webkit-flex: 1; flex: 1; font-size: 18px; }
+.aj-linha .o-redondo { margin-left: 0; background: #2fb344; }
+.aj-botoes { margin-top: 6px; }
+.aj-padrao { background: none; border: 0; color: #888; font-size: 15px; padding: 8px 12px; margin-right: 10px; }
+.aj-ok { background: none; border: 2px solid #2fb344; color: #2fb344; border-radius: 20px; font-size: 17px; font-weight: bold; padding: 6px 34px; }
 .botao.escuro { background: #34383c; color: #fff; }
 .o-botoes .botao { margin-top: 8px; }

@@ -211,15 +211,16 @@ export function gridFor(
   adjust: { cols?: number; rows?: number } = {},
   lineHeight = 1.3,
 ) {
-  const baseCols = Math.max(10, Math.floor(width / (fontSize * 0.6)));
+  // A letra fica sempre do tamanho escolhido e cada linha tem altura fixa. Os ajustes só mudam
+  // quantos caracteres e linhas entram: a moldura de X cresce ou encolhe na tela a cada toque,
+  // como no Toque Fácil, e a cifra ocupa exatamente a área que a moldura marcou.
+  // 0,605 em vez de 0,6: algumas fontes monoespaçadas são um tiquinho mais largas.
+  const baseCols = Math.max(10, Math.floor(width / (fontSize * 0.605)));
   const cols = Math.max(10, baseCols + (adjust.cols ?? 0));
-  // 2% de folga: algumas fontes monoespaçadas são um tiquinho mais largas que 0,6.
-  const font = Math.min(fontSize * 1.6, (width / (cols * 0.6)) * 0.98);
-  // As linhas saem do tamanho escolhido (não da fonte já encaixada na largura): assim mudar a largura
-  // no "Ajustes de resolução" não mexe na altura.
-  const baseRows = Math.max(4, Math.floor(height / (fontSize * lineHeight)));
+  const line = fontSize * lineHeight;
+  const baseRows = Math.max(4, Math.floor(height / line));
   const rows = Math.max(4, baseRows + (adjust.rows ?? 0));
-  return { cols, rows, font, line: height / rows };
+  return { cols, rows, font: fontSize, line };
 }
 
 /**

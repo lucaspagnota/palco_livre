@@ -98,6 +98,9 @@ describe('páginas', () => {
     expect(gridFor(400, 800, 22, { rows: -2 }).rows).toBe(g.rows - 2);
     // Mudar a largura não muda a altura.
     expect(gridFor(400, 800, 22, { cols: 5 }).rows).toBe(g.rows);
+    // A letra não encolhe nem estica: a moldura muda de tamanho na tela.
+    expect(gridFor(400, 800, 22, { cols: 5, rows: 3 }).font).toBe(22);
+    expect(gridFor(400, 800, 22, { rows: 3 }).line).toBe(g.line);
   });
 });
 
