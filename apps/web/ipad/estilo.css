@@ -112,3 +112,10 @@ h1 { font-size: 26px; margin: 0 0 6px; }
 .tri.esq { border-width: 0.4em 0.68em 0.4em 0; border-color: transparent currentColor transparent transparent; }
 .play .tri { left: 2px; }
 .i-caixa .tri { font-size: 30px; }
+
+/* Ajustes de resolução: caixa no meio, sem escurecer a moldura de X */
+.aj-caixa { position: fixed; top: 50%; left: 50%; width: 380px; margin-left: -190px; margin-top: -150px; z-index: 20; background: #1b1d1f; color: #fff; border: 2px solid #ff7a45; border-radius: 16px; padding: 18px; }
+.aj-caixa h2 { margin: 0 0 8px; font-size: 20px; }
+.aj-caixa p { margin: 0 0 14px; color: #bbb; font-size: 16px; }
+.botao.escuro { background: #34383c; color: #fff; }
+.o-botoes .botao { margin-top: 8px; }

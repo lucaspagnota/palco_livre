@@ -1,7 +1,7 @@
 // Leitor de palco: fundo preto, cifra paginada, toque à direita avança e à esquerda volta.
 // O pedal (qualquer marca) chega como tecla e faz o mesmo.
 import {
-  TAMANHOS, chordShape, flatsForKey, gridFor, layoutPages, layoutRows, listChords, passosDoShow, transposeKey, transposeSource, type Musica,
+  TAMANHOS, chordShape, flatsForKey, gridFor, layoutPages, molduraDeAjuste, layoutRows, listChords, passosDoShow, transposeKey, transposeSource, type Musica,
 } from '@palco/cifra';
 import { useKeepAwake } from 'expo-keep-awake';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -43,7 +43,7 @@ export default function Leitor() {
 
 function Painel() {
   useKeepAwake();
-  const params = useLocalSearchParams<{ repertorio?: string; inicio?: string; musicas?: string; musica?: string }>();
+  const params = useLocalSearchParams<{ repertorio?: string; inicio?: string; musicas?: string; musica?: string; ajuste?: string }>();
   const { conteudo, config, mudarConfig } = useStore();
   const insets = useSafeAreaInsets();
   const janela = useWindowDimensions();
@@ -62,11 +62,13 @@ function Painel() {
   const [pagina, setPagina] = useState(0);
   const [area, setArea] = useState({ w: 0, h: 0 });
   const [opcoes, setOpcoes] = useState(false);
+  // Ajustes de resolução: moldura de X no lugar da cifra para acertar caracteres e linhas na tela.
+  const [ajustando, setAjustando] = useState(params.ajuste === '1');
   // Tom mudado aqui (meios-tons a partir do original de cada música). Vale enquanto o repertório está
   // aberto, indo e voltando entre as músicas; ao sair, volta ao tom da música. Para mudar de vez, só no site.
   const [tons, setTons] = useState<Record<string, number>>({});
   const mudarTom = (id: string, passos: number) => setTons(atual => ({ ...atual, [id]: passos }));
-  const [instrucoes, setInstrucoes] = useState(config.instrucoes && !instrucoesVistas);
+  const [instrucoes, setInstrucoes] = useState(config.instrucoes && !instrucoesVistas && params.ajuste !== '1');
   const irParaFim = useRef(false);
   const rolagem = useRef<ComponentRef<typeof ScrollView>>(null);
   const posRolagem = useRef({ y: 0, max: 0 });
@@ -85,7 +87,10 @@ function Painel() {
   const duas = config.duasPaginas && config.modo === 'paginacao' && paisagem && area.w >= 800;
   const porVez = duas ? 2 : 1;
   const larguraTexto = Math.max(120, (area.w - MARGEM * 2 - colunaAcordes - (duas ? MARGEM * 2 : 0)) / porVez);
-  const grade = gridFor(larguraTexto - recuo, Math.max(120, area.h - 4), tamanho, paisagem ? config.paisagem : config.retrato);
+  const ajuste = paisagem ? config.paisagem : config.retrato;
+  const grade = gridFor(larguraTexto - recuo, Math.max(120, area.h - 4), tamanho, ajuste);
+  const mudarAjuste = (campo: 'cols' | 'rows', d: number) => mudarConfig(paisagem ? { paisagem: { ...ajuste, [campo]: ajuste[campo] + d } } : { retrato: { ...ajuste, [campo]: ajuste[campo] + d } });
+  const fecharAjuste = () => { setAjustando(false); if (!musica) sair(); };
 
   const opcoesLayout = musica ? {
     cols: grade.cols, steps: passos, show: config.mostrar, upperLyrics: config.letraMaiuscula, upperTitle: config.tituloMaiusculo,
@@ -134,7 +139,7 @@ function Painel() {
   }
 
   usePedal(tecla => {
-    if (opcoes) return;
+    if (opcoes || ajustando) return;
     setInstrucoes(false);
     const acao = acaoDaTecla(config.pedal, tecla);
     if (acao === 'avancar') avancar();
@@ -147,12 +152,13 @@ function Painel() {
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
       if (opcoes) { setOpcoes(false); return true; }
+      if (ajustando) { fecharAjuste(); return true; }
       if (!config.confirmarSaida) return false;
       Alert.alert('Sair do leitor?', '', [{ text: 'Continuar tocando', style: 'cancel' }, { text: 'Sair', onPress: sair }]);
       return true;
     });
     return () => sub.remove();
-  }, [config.confirmarSaida, opcoes]);
+  }, [config.confirmarSaida, opcoes, ajustando, musica]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function sair() {
     if (router.canGoBack()) router.back(); else router.replace('/');
@@ -170,7 +176,7 @@ function Painel() {
   const blocoSeguinte = proxima && show[atual + 1]?.bloco && show[atual + 1].bloco !== show[atual]?.bloco ? show[atual + 1].bloco : null;
   const corTopo = a.cifra;
 
-  if (!musica) {
+  if (!musica && !ajustando) {
     return (
       <View style={[s.tela, { backgroundColor: '#000', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24 }]}>
         <Text style={[s.texto, { textAlign: 'center' }]}>{conteudo ? 'Nada para tocar aqui.' : 'Baixe seu conteúdo primeiro.'}</Text>
@@ -182,6 +188,7 @@ function Painel() {
   return (
     <View style={{ flex: 1, backgroundColor: a.fundo }}>
       <StatusBar hidden />
+      {musica ? (
       <View style={{ flexDirection: 'row', alignItems: 'center', borderBottomWidth: 2, borderBottomColor: '#2f4f4f', paddingTop: insets.top + 2, paddingHorizontal: MARGEM, paddingBottom: 4 }}>
         <Pressable style={{ flex: 3, minWidth: 0 }} onPress={() => irPara(atual - 1)} focusable={false} accessibilityLabel="Música anterior">
           <Text numberOfLines={1} style={{ color: corTopo, fontFamily: fonte.negrito, fontSize: tablet ? 22 : 18 }}>{musica.titulo.toUpperCase()}</Text>
@@ -208,11 +215,22 @@ function Painel() {
           {proxima ? <Text numberOfLines={1} style={{ color: '#bbb', fontFamily: fonte.media, fontSize: tablet ? 15 : 13 }}>▶ {proxima.titulo}</Text> : null}
         </Pressable>
       </View>
+      ) : (
+        <View style={{ borderBottomWidth: 2, borderBottomColor: '#2f4f4f', paddingTop: insets.top + 2, paddingHorizontal: MARGEM, paddingBottom: 6 }}>
+          <Text style={{ color: corTopo, fontFamily: fonte.negrito, fontSize: tablet ? 22 : 18 }}>AJUSTES DE RESOLUÇÃO</Text>
+        </View>
+      )}
 
       <View style={{ flex: 1, flexDirection: 'row' }} onLayout={e => setArea({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
         <View style={{ flex: 1, paddingHorizontal: MARGEM, overflow: 'hidden' }}>
           {area.w > 0 ? (
-            config.modo === 'rolagem' ? (
+            ajustando ? (
+              <View style={{ flexDirection: 'row', gap: duas ? MARGEM * 2 : 0 }}>
+                {Array.from({ length: porVez }, (_, i) => (
+                  <Pagina key={i} linhas={molduraDeAjuste(grade.cols, grade.rows)} aparencia={a} fonte={grade.font} altura={grade.line} largura={larguraTexto} recuo={recuo} />
+                ))}
+              </View>
+            ) : config.modo === 'rolagem' ? (
               <ScrollView
                 ref={rolagem}
                 scrollEventThrottle={64}
@@ -238,7 +256,7 @@ function Painel() {
             {acordes.map(f => <Diagrama key={f!.name} forma={f!} tamanho={76} cor={a.cifra} tinta={a.letra} />)}
           </ScrollView>
         ) : null}
-        {config.modo === 'paginacao' ? (
+        {config.modo === 'paginacao' && !ajustando ? (
           <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: colunaAcordes, flexDirection: 'row' }}>
             <Pressable style={{ flex: 1 }} onPress={voltar} focusable={false} accessibilityLabel="Página anterior" />
             <Pressable style={{ flex: 1 }} onPress={avancar} focusable={false} accessibilityLabel="Próxima página" />
@@ -277,6 +295,18 @@ function Painel() {
 
       {instrucoes ? <Instrucoes aoFechar={fecharInstrucoes} topo={insets.top} /> : null}
 
+      {ajustando ? (
+        <AjusteResolucao
+          cols={grade.cols}
+          rows={grade.rows}
+          paisagem={paisagem}
+          aoMudar={mudarAjuste}
+          aoPadrao={() => mudarConfig(paisagem ? { paisagem: { cols: 0, rows: 0 } } : { retrato: { cols: 0, rows: 0 } })}
+          aoFechar={fecharAjuste}
+        />
+      ) : null}
+
+      {musica ? (
       <Modal visible={opcoes} transparent animationType="fade" onRequestClose={() => setOpcoes(false)} supportedOrientations={['portrait', 'landscape']}>
         <Pressable style={s.fundoModal} onPress={() => setOpcoes(false)}>
           <Pressable style={[s.modal, { padding: 18, gap: 14 }]} onPress={() => undefined}>
@@ -309,6 +339,7 @@ function Painel() {
               </ScrollView>
             ) : null}
             <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
+              <Botao rotulo="Ajustes de resolução" tipo="escuro" pequeno onPress={() => { setOpcoes(false); setAjustando(true); }} />
               <Botao rotulo="Configurações" icone="engrenagem" tipo="escuro" pequeno onPress={() => { setOpcoes(false); router.push('/configuracoes'); }} />
               <Botao rotulo="Sair do leitor" icone="sair" tipo="perigo" pequeno onPress={() => { setOpcoes(false); sair(); }} />
               <Botao rotulo="Fechar" pequeno onPress={() => setOpcoes(false)} />
@@ -316,6 +347,34 @@ function Painel() {
           </Pressable>
         </Pressable>
       </Modal>
+      ) : null}
+    </View>
+  );
+}
+
+/** Caixa do "Ajustes de resolução", por cima da moldura de X. Vale para o modo em que o aparelho está (em pé ou deitado). */
+function AjusteResolucao({ cols, rows, paisagem, aoMudar, aoPadrao, aoFechar }: {
+  cols: number; rows: number; paisagem: boolean;
+  aoMudar: (campo: 'cols' | 'rows', d: number) => void; aoPadrao: () => void; aoFechar: () => void;
+}) {
+  return (
+    <View pointerEvents="box-none" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <View style={[s.modal, { padding: 18, gap: 14, width: 340, maxWidth: '100%' }]}>
+        <Text style={[s.tituloModal, { padding: 0 }]}>Ajustes de resolução ({paisagem ? 'deitado' : 'em pé'})</Text>
+        <Text style={s.suave}>Mude a largura e a altura até a moldura de X ocupar toda a área da letra cifrada.</Text>
+        <LinhaOpcao rotulo={`Largura: ${cols} caracteres`}>
+          <Redondo icone="menos" onPress={() => aoMudar('cols', -1)} rotulo="Menos caracteres" />
+          <Redondo icone="mais" onPress={() => aoMudar('cols', 1)} rotulo="Mais caracteres" />
+        </LinhaOpcao>
+        <LinhaOpcao rotulo={`Altura: ${rows} linhas`}>
+          <Redondo icone="menos" onPress={() => aoMudar('rows', -1)} rotulo="Menos linhas" />
+          <Redondo icone="mais" onPress={() => aoMudar('rows', 1)} rotulo="Mais linhas" />
+        </LinhaOpcao>
+        <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'flex-end' }}>
+          <Botao rotulo="Padrão" tipo="escuro" pequeno onPress={aoPadrao} />
+          <Botao rotulo="Ok" pequeno onPress={aoFechar} />
+        </View>
+      </View>
     </View>
   );
 }

@@ -215,7 +215,24 @@ export function gridFor(
   const cols = Math.max(10, baseCols + (adjust.cols ?? 0));
   // 2% de folga: algumas fontes monoespaçadas são um tiquinho mais largas que 0,6.
   const font = Math.min(fontSize * 1.6, (width / (cols * 0.6)) * 0.98);
-  const baseRows = Math.max(4, Math.floor(height / (font * lineHeight)));
+  // As linhas saem do tamanho escolhido (não da fonte já encaixada na largura): assim mudar a largura
+  // no "Ajustes de resolução" não mexe na altura.
+  const baseRows = Math.max(4, Math.floor(height / (fontSize * lineHeight)));
   const rows = Math.max(4, baseRows + (adjust.rows ?? 0));
   return { cols, rows, font, line: height / rows };
+}
+
+/**
+ * Moldura de X do "Ajustes de resolução": uma página cheia, com X na primeira e na última linha
+ * e na primeira e na última coluna. Mostra na tela até onde vai a letra cifrada; a pessoa muda
+ * os caracteres e as linhas até a moldura ocupar toda a área.
+ */
+export function molduraDeAjuste(cols: number, rows: number): Row[] {
+  const c = Math.max(2, Math.floor(cols));
+  const r = Math.max(2, Math.floor(rows));
+  const cheia = 'X'.repeat(c);
+  const lados = 'X' + ' '.repeat(c - 2) + 'X';
+  const out: Row[] = [];
+  for (let i = 0; i < r; i++) out.push({ kind: 'lyric', text: i === 0 || i === r - 1 ? cheia : lados, refrao: false, voz2: false });
+  return out;
 }

@@ -2,7 +2,7 @@
 // Telas: Entrar, Repertórios/Músicas, um repertório e o leitor (igual ao do app).
 // Escrito sem React e sem nada moderno no navegador; o montar.mjs converte para o JavaScript antigo.
 import './polyfills';
-import { APARENCIA_PADRAO, TAMANHOS, estiloDaLinha, gridFor, layoutPages, passosDoShow, transposeKey, type PassoDoShow, type Row } from '@palco/cifra';
+import { APARENCIA_PADRAO, TAMANHOS, estiloDaLinha, gridFor, layoutPages, molduraDeAjuste, passosDoShow, transposeKey, type PassoDoShow, type Row } from '@palco/cifra';
 import {
   SEM_INTERNET, baixarConteudo, cifraDe, conteudoGuardado, entrar, gravarConfig, letraGuardada, letrasNoIpad, lerConfig,
   sairDaConta, sessaoGuardada, type Conteudo, type MusicaResumo, type Repertorio,
@@ -268,6 +268,10 @@ interface EstadoLeitor {
   tons: Record<string, number>;
   opcoes: boolean;
   irParaFim: boolean;
+  /** Ajustes de resolução abertos: moldura de X no lugar da cifra. */
+  ajustando: boolean;
+  /** iPad deitado (vale o ajuste de paisagem). */
+  paisagem: boolean;
 }
 
 let L: EstadoLeitor | null = null;
@@ -297,7 +301,7 @@ function tocarMusica(id: string) {
 }
 
 function abrirLeitor(faixas: Faixa[], repertorio: Repertorio | null, atual: number) {
-  L = { faixas, repertorio, atual, pagina: 0, paginas: [], porVez: 1, tons: {}, opcoes: false, irParaFim: false };
+  L = { faixas, repertorio, atual, pagina: 0, paginas: [], porVez: 1, tons: {}, opcoes: false, irParaFim: false, ajustando: false, paisagem: false };
   tela = { nome: 'leitor' };
   document.body.className = 'no-leitor';
   app.innerHTML = '';
@@ -325,7 +329,7 @@ function abrirLeitor(faixas: Faixa[], repertorio: Repertorio | null, atual: numb
   toque(document.getElementById('l-ant'), () => irPara(L!.atual - 1));
   toque(document.getElementById('l-prox'), () => irPara(L!.atual + 1));
   toque(document.getElementById('l-sair'), () => mostrar(repertorio ? { nome: 'repertorio', id: repertorio.id } : { nome: 'lista' }));
-  toque(document.getElementById('l-opcoes'), () => { L!.opcoes = true; desenharOpcoes(); });
+  toque(document.getElementById('l-opcoes'), () => { if (L!.ajustando) { L!.ajustando = false; montarMusica(); } L!.opcoes = true; desenharOpcoes(); });
   const h = () => { const el = document.getElementById('l-hora'); if (el) el.textContent = hora(); };
   h();
   relogio = window.setInterval(h, 15000);
@@ -356,7 +360,8 @@ function montarMusica() {
   const duas = config.duasPaginas && paisagem && w >= 800;
   L.porVez = duas ? 2 : 1;
   const largura = Math.max(120, (w - MARGEM * 2 - (duas ? MARGEM * 2 : 0)) / L.porVez);
-  const grade = gridFor(largura - recuo, Math.max(120, h - 4), tamanho);
+  L.paisagem = paisagem;
+  const grade = gridFor(largura - recuo, Math.max(120, h - 4), tamanho, paisagem ? config.paisagem : config.retrato);
   const passos = L.tons[f.musica.id] || 0;
   const tom = f.musica.tom ? transposeKey(f.musica.tom, passos) : '';
   L.paginas = layoutPages(f.letra, { cols: grade.cols, rows: grade.rows, steps: passos, show: config.soLetra ? 'letra' : 'tudo', key: tom });
@@ -393,10 +398,10 @@ function desenharPagina(grade: ReturnType<typeof gridFor>, largura: number, recu
 
   // A cifra: uma linha de texto monoespaçado por linha da grade.
   let html = '';
-  for (let p = L.pagina; p < L.pagina + L.porVez && p < total; p++) {
+  for (let p = L.pagina; p < L.pagina + L.porVez && (L.ajustando || p < total); p++) {
     html += '<div class="l-pagina" style="width:' + Math.floor(largura) + 'px' + (p > L.pagina ? ';margin-left:' + MARGEM * 2 + 'px' : '') + '">';
     const barra = Math.max(2, Math.round(grade.font / 7));
-    for (const l of L.paginas[p]) {
+    for (const l of L.ajustando ? molduraDeAjuste(grade.cols, grade.rows) : L.paginas[p]) {
       const e = estiloDaLinha(l.kind, l.refrao, l.voz2, A);
       const marcador = l.refrao && l.kind !== 'blank';
       html += '<div class="l-linha" style="height:' + grade.line + 'px;line-height:' + grade.line + 'px;padding-left:' + recuo + 'px;font-size:' + grade.font + 'px;color:' + e.cor +
@@ -417,7 +422,7 @@ function irPara(i: number) {
 }
 
 function avancarPagina() {
-  if (!L) return;
+  if (!L || L.ajustando) return;
   if (L.pagina + L.porVez < L.paginas.length) {
     L.pagina += L.porVez;
     if (ultimaGrade) desenharPagina(ultimaGrade.grade, ultimaGrade.largura, ultimaGrade.recuo, ultimaGrade.tom);
@@ -425,7 +430,7 @@ function avancarPagina() {
 }
 
 function voltarPagina() {
-  if (!L) return;
+  if (!L || L.ajustando) return;
   if (L.pagina > 0) {
     L.pagina = Math.max(0, L.pagina - L.porVez);
     if (ultimaGrade) desenharPagina(ultimaGrade.grade, ultimaGrade.largura, ultimaGrade.recuo, ultimaGrade.tom);
@@ -465,7 +470,7 @@ function desenharOpcoes() {
     '<button class="o-caixinha" data-o="soLetra">' + (config.soLetra ? '☑︎' : '☐︎') + ' Só a letra (esconder cifras)</button>' +
     '<button class="o-caixinha" data-o="duas">' + (config.duasPaginas ? '☑︎' : '☐︎') + ' Duas páginas com o iPad deitado</button>' +
     lista +
-    '<div class="o-botoes"><button class="botao perigo" data-o="sair">Sair do leitor</button><button class="botao" data-o="fechar">Fechar</button></div>' +
+    '<div class="o-botoes"><button class="botao escuro" data-o="ajuste">Ajustes de resolução</button><button class="botao perigo" data-o="sair">Sair do leitor</button><button class="botao" data-o="fechar">Fechar</button></div>' +
     '</div></div>';
   const caixa = lugar.querySelector('.o-lista') as HTMLElement | null;
   const atual = lugar.querySelector('.o-musica.atual') as HTMLElement | null;
@@ -473,13 +478,27 @@ function desenharOpcoes() {
 }
 
 document.addEventListener('click', e => {
-  if (!L || !L.opcoes) return;
+  if (!L || (!L.opcoes && !L.ajustando)) return;
   let el = e.target as HTMLElement | null;
   while (el && !el.getAttribute('data-o')) el = el.parentElement;
   if (!el) return;
   const o = el.getAttribute('data-o');
   const f = L.faixas[L.atual];
   if (o === 'nada') return;
+  if (o === 'ajuste') { L.opcoes = false; L.ajustando = true; montarMusica(); desenharAjuste(); return; }
+  if (o && o.indexOf('aj-') === 0) {
+    const ajuste = L.paisagem ? config.paisagem : config.retrato;
+    if (o === 'aj-cols-') ajuste.cols--;
+    if (o === 'aj-cols+') ajuste.cols++;
+    if (o === 'aj-rows-') ajuste.rows--;
+    if (o === 'aj-rows+') ajuste.rows++;
+    if (o === 'aj-padrao') { ajuste.cols = 0; ajuste.rows = 0; }
+    if (o === 'aj-ok') L.ajustando = false;
+    gravarConfig(config);
+    montarMusica();
+    desenharAjuste();
+    return;
+  }
   if (o === 'fechar') { L.opcoes = false; desenharOpcoes(); return; }
   if (o === 'sair') { const r = L.repertorio; mostrar(r ? { nome: 'repertorio', id: r.id } : { nome: 'lista' }); return; }
   if (o === 'ir') { L.opcoes = false; desenharOpcoes(); irPara(Number(el.getAttribute('data-i'))); return; }
@@ -492,6 +511,24 @@ document.addEventListener('click', e => {
   montarMusica();
   desenharOpcoes();
 }, false);
+
+/** Caixa do "Ajustes de resolução", por cima da moldura de X (vale para em pé ou deitado, como o iPad estiver). */
+function desenharAjuste() {
+  const lugar = document.getElementById('l-modal');
+  if (!L || !lugar) return;
+  if (!L.ajustando) { lugar.innerHTML = ''; return; }
+  const g = ultimaGrade ? ultimaGrade.grade : { cols: 0, rows: 0 };
+  lugar.innerHTML =
+    '<div class="aj-caixa">' +
+    '<h2>Ajustes de resolução (' + (L.paisagem ? 'deitado' : 'em pé') + ')</h2>' +
+    '<p>Mude a largura e a altura até a moldura de X ocupar toda a área da letra cifrada.</p>' +
+    '<div class="o-linha"><span>Largura: <b>' + g.cols + '</b> caracteres</span>' +
+    '<button class="o-redondo" data-o="aj-cols-" aria-label="Menos caracteres">−</button><button class="o-redondo" data-o="aj-cols+" aria-label="Mais caracteres">+</button></div>' +
+    '<div class="o-linha"><span>Altura: <b>' + g.rows + '</b> linhas</span>' +
+    '<button class="o-redondo" data-o="aj-rows-" aria-label="Menos linhas">−</button><button class="o-redondo" data-o="aj-rows+" aria-label="Mais linhas">+</button></div>' +
+    '<div class="o-botoes"><button class="botao escuro" data-o="aj-padrao">Padrão</button><button class="botao" data-o="aj-ok">Ok</button></div>' +
+    '</div>';
+}
 
 function mostrarInstrucoes() {
   const lugar = document.getElementById('l-modal');
@@ -521,7 +558,7 @@ document.addEventListener('keydown', e => {
 let girando = 0;
 window.addEventListener('resize', () => {
   window.clearTimeout(girando);
-  girando = window.setTimeout(() => { if (L) montarMusica(); }, 250);
+  girando = window.setTimeout(() => { if (L) { montarMusica(); if (L.ajustando) desenharAjuste(); } }, 250);
 }, false);
 
 // ---------- Versão nova do leitor ----------

@@ -82,7 +82,14 @@ export interface Config {
   soLetra: boolean;
   duasPaginas: boolean;
   instrucoesVistas: boolean;
+  /** Ajustes de resolução: caracteres e linhas a mais (ou a menos) em pé e deitado. */
+  retrato: Ajuste;
+  paisagem: Ajuste;
 }
+
+export interface Ajuste { cols: number; rows: number }
+
+const ajusteDe = (a: Partial<Ajuste> | undefined): Ajuste => ({ cols: (a && a.cols) || 0, rows: (a && a.rows) || 0 });
 
 export function lerConfig(): Config {
   const c = ler<Partial<Config>>(CHAVE_CONFIG) || {};
@@ -91,6 +98,8 @@ export function lerConfig(): Config {
     soLetra: !!c.soLetra,
     duasPaginas: c.duasPaginas !== false,
     instrucoesVistas: !!c.instrucoesVistas,
+    retrato: ajusteDe(c.retrato),
+    paisagem: ajusteDe(c.paisagem),
   };
 }
 
