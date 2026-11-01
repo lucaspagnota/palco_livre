@@ -90,7 +90,7 @@ function desenhar() {
 }
 
 function topo(direita: string, esquerda = '') {
-  return '<div class="topo">' + (esquerda || '<div class="marca"><span class="logo">▶</span> Palco Livre</div>') + '<div class="topo-botoes">' + direita + '</div></div>';
+  return '<div class="topo">' + (esquerda || '<div class="marca"><span class="logo"><i class="tri"></i></span> Palco Livre</div>') + '<div class="topo-botoes">' + direita + '</div></div>';
 }
 
 function desenharEntrar() {
@@ -186,7 +186,7 @@ function desenharItens() {
       const info = [n + (n === 1 ? ' música' : ' músicas'), r.estilo, deOutro ? 'da banda · ' + (conteudo.nicks[r.donoId] || 'outra pessoa') : ''].filter(Boolean).join(' · ');
       html += '<div class="item">' +
         '<button class="item-texto" data-acao="abrir-rep" data-id="' + esc(r.id) + '"><b>' + esc(r.titulo) + '</b><span>' + esc(info) + '</span></button>' +
-        '<button class="play" data-acao="tocar-rep" data-id="' + esc(r.id) + '" aria-label="Tocar">▶</button>' +
+        '<button class="play" data-acao="tocar-rep" data-id="' + esc(r.id) + '" aria-label="Tocar"><i class="tri"></i></button>' +
         '</div>';
     }
     if (!lista.length) html = '<p class="vazio">Nenhum repertório' + (b ? ' com essa busca' : '') + '.</p>';
@@ -210,7 +210,7 @@ function desenharRepertorio(id: string) {
   const r = conteudo && conteudo.repertorios.filter(x => x.id === id)[0];
   if (!r) { mostrar({ nome: 'lista' }); return; }
   const voltar = '<button class="botao claro" data-acao="voltar">‹ Voltar</button>';
-  let html = topo('<button class="botao" data-acao="tocar-rep" data-id="' + esc(r.id) + '">▶ Tocar</button>', voltar);
+  let html = topo('<button class="botao" data-acao="tocar-rep" data-id="' + esc(r.id) + '"><i class="tri"></i> Tocar</button>', voltar);
   html += '<div class="cabeca"><h1>' + esc(r.titulo) + '</h1></div>';
   const show = passosDoShow(r.itens, x => !!musicaPorId(x));
   let blocoAntes: string | null = null;
@@ -313,8 +313,8 @@ function abrirLeitor(faixas: Faixa[], repertorio: Repertorio | null, atual: numb
     '<div class="l-zona l-zona-esq" id="l-voltar"></div><div class="l-zona l-zona-dir" id="l-avancar"></div></div>' +
     '<div class="l-rodape">' +
     '<div class="l-rod-esq"><b>PalcoLivre</b><span>' + esc(repertorio ? repertorio.titulo.toUpperCase() : '') + '</span></div>' +
-    '<button class="l-sair" id="l-sair">⏏ SAIR</button>' +
-    '<div class="l-rod-dir"><button class="l-engrenagem" id="l-opcoes" aria-label="Opções">⚙</button><b id="l-hora"></b></div>' +
+    '<button class="l-sair" id="l-sair">⏏︎ SAIR</button>' +
+    '<div class="l-rod-dir"><button class="l-engrenagem" id="l-opcoes" aria-label="Opções">⚙︎</button><b id="l-hora"></b></div>' +
     '</div>' +
     '<div id="l-modal"></div>';
   document.body.appendChild(leitorEl);
@@ -389,7 +389,7 @@ function desenharPagina(grade: ReturnType<typeof gridFor>, largura: number, recu
   const pags = Math.max(1, Math.ceil(total / L.porVez));
   (document.getElementById('l-prox') as HTMLElement).innerHTML =
     '<div class="l-conta">♫ ' + (L.atual + 1) + '/' + L.faixas.length + '&nbsp;&nbsp; ▤ ' + Math.min(Math.floor(L.pagina / L.porVez) + 1, pags) + '/' + pags + '</div>' +
-    (proxima ? '<div class="l-proxima">▶ ' + esc(proxima.musica.titulo) + '</div>' : '');
+    (proxima ? '<div class="l-proxima"><i class="tri"></i> ' + esc(proxima.musica.titulo) + '</div>' : '');
 
   // A cifra: uma linha de texto monoespaçado por linha da grade.
   let html = '';
@@ -462,8 +462,8 @@ function desenharOpcoes() {
     '<button class="o-redondo" data-o="tom-" aria-label="Baixar meio tom">−</button><button class="o-redondo" data-o="tom+" aria-label="Subir meio tom">+</button></div>' +
     '<div class="o-linha"><span>Tamanho da letra: <b>' + config.tamanho + '</b></span>' +
     '<button class="o-redondo" data-o="fonte-" aria-label="Diminuir">−</button><button class="o-redondo" data-o="fonte+" aria-label="Aumentar">+</button></div>' +
-    '<button class="o-caixinha" data-o="soLetra">' + (config.soLetra ? '☑' : '☐') + ' Só a letra (esconder cifras)</button>' +
-    '<button class="o-caixinha" data-o="duas">' + (config.duasPaginas ? '☑' : '☐') + ' Duas páginas com o iPad deitado</button>' +
+    '<button class="o-caixinha" data-o="soLetra">' + (config.soLetra ? '☑︎' : '☐︎') + ' Só a letra (esconder cifras)</button>' +
+    '<button class="o-caixinha" data-o="duas">' + (config.duasPaginas ? '☑︎' : '☐︎') + ' Duas páginas com o iPad deitado</button>' +
     lista +
     '<div class="o-botoes"><button class="botao perigo" data-o="sair">Sair do leitor</button><button class="botao" data-o="fechar">Fechar</button></div>' +
     '</div></div>';
@@ -499,7 +499,7 @@ function mostrarInstrucoes() {
   lugar.innerHTML =
     '<div class="instrucoes" id="instrucoes">' +
     '<div class="i-linha i-topo"><div class="i-caixa">Toque no título:<br>música anterior</div><div class="i-caixa">Toque aqui:<br>próxima música</div></div>' +
-    '<div class="i-linha i-meio"><div class="i-caixa">◀<br>Voltar página</div><div class="i-caixa">▶<br>Avançar página</div></div>' +
+    '<div class="i-linha i-meio"><div class="i-caixa"><i class="tri esq"></i><br>Voltar página</div><div class="i-caixa"><i class="tri"></i><br>Avançar página</div></div>' +
     '<p>Embaixo: SAIR fecha o leitor. A engrenagem, ao lado da hora, muda o tom e o tamanho da letra.</p>' +
     '<button class="botao">Entendi</button></div>';
   toque(document.getElementById('instrucoes'), () => {
