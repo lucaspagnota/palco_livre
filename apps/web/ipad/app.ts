@@ -201,8 +201,9 @@ function desenharLista() {
     const f = filtroMusicas;
     const ms = conteudo ? conteudo.musicas : [];
     const op = (lista: string[], todos: string) => [{ valor: '', rotulo: todos }].concat(lista.map(v => ({ valor: v, rotulo: v })));
-    html += '<input id="busca" type="search" placeholder="Título ou artista" value="' + esc(f.busca) + '" autocorrect="off" autocapitalize="off">' +
-      '<div class="filtros-linha">' +
+    // Busca e filtros na mesma linha, a busca maior.
+    html += '<div class="filtros-linha">' +
+      '<input id="busca" type="search" placeholder="Título ou artista" value="' + esc(f.busca) + '" autocorrect="off" autocapitalize="off">' +
       escolha('f-estilo', f.estilo, op(unicos(ms.map(m => m.estilo)), 'Estilo')) +
       escolha('f-artista', f.artista, op(unicos(ms.map(m => m.artista)), 'Artista')) +
       escolha('f-tom', f.tom, op(unicos(ms.map(m => m.tom)), 'Tom')) +
@@ -212,8 +213,8 @@ function desenharLista() {
   } else {
     const f = filtroRepertorios;
     const estilos = unicos(conteudo ? conteudo.repertorios.map(r => r.estilo) : []);
-    html += '<input id="busca" type="search" placeholder="Título" value="' + esc(f.busca) + '" autocorrect="off" autocapitalize="off">' +
-      '<div class="filtros-linha">' +
+    html += '<div class="filtros-linha">' +
+      '<input id="busca" type="search" placeholder="Título" value="' + esc(f.busca) + '" autocorrect="off" autocapitalize="off">' +
       escolha('f-estilo', f.estilo, [{ valor: '', rotulo: 'Todos os estilos' }].concat(estilos.map(v => ({ valor: v, rotulo: v })))) +
       escolha('f-dono', f.dono, [{ valor: 'todos', rotulo: 'Todos' }, { valor: 'meus', rotulo: 'Meus repertórios' }, { valor: 'recebidos', rotulo: 'Recebidos da banda' }]) +
       '</div>';
