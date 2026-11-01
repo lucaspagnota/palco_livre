@@ -606,17 +606,21 @@ function desenharOpcoes() {
     }
     lista += '</div>';
   }
+  // Caixa no canto de cima à direita, como no Toque Fácil: a cifra continua aparecendo do lado.
   lugar.innerHTML =
     '<div class="o-fundo" data-o="fechar"><div class="o-caixa" data-o="nada">' +
     '<h2>' + esc(f.musica.titulo) + '</h2>' +
-    '<div class="o-linha"><span>Tom' + (tom ? ': <b>' + esc(tom) + '</b>' : '') + (passos ? ' <small>(só agora)</small>' : '') + '</span>' +
-    '<button class="o-redondo" data-o="tom-" aria-label="Baixar meio tom">−</button><button class="o-redondo" data-o="tom+" aria-label="Subir meio tom">+</button></div>' +
-    '<div class="o-linha"><span>Tamanho da letra: <b>' + config.tamanho + '</b></span>' +
-    '<button class="o-redondo" data-o="fonte-" aria-label="Diminuir">−</button><button class="o-redondo" data-o="fonte+" aria-label="Aumentar">+</button></div>' +
-    '<button class="o-caixinha" data-o="soLetra">' + (config.soLetra ? '☑︎' : '☐︎') + ' Só a letra (esconder cifras)</button>' +
-    '<button class="o-caixinha" data-o="duas">' + (config.duasPaginas ? '☑︎' : '☐︎') + ' Duas páginas com o iPad deitado</button>' +
+    '<div class="o-mm"><button class="o-redondo" data-o="tom-" aria-label="Baixar meio tom">−</button>' +
+    '<span>Tom' + (tom ? ': ' + esc(tom) : '') + (passos ? '<small>só agora</small>' : '') + '</span>' +
+    '<button class="o-redondo" data-o="tom+" aria-label="Subir meio tom">+</button></div>' +
+    '<div class="o-mm"><button class="o-redondo" data-o="fonte-" aria-label="Diminuir a letra">−</button>' +
+    '<span>Fonte ' + config.tamanho + '</span>' +
+    '<button class="o-redondo" data-o="fonte+" aria-label="Aumentar a letra">+</button></div>' +
+    '<button class="o-caixinha" data-o="soLetra">' + (config.soLetra ? '☑︎' : '☐︎') + ' Só a letra</button>' +
+    '<button class="o-caixinha" data-o="duas">' + (config.duasPaginas ? '☑︎' : '☐︎') + ' Duas páginas deitado</button>' +
     lista +
-    '<div class="o-botoes"><button class="botao escuro" data-o="ajuste">Ajustes de resolução</button><button class="botao perigo" data-o="sair">Sair do leitor</button><button class="botao" data-o="fechar">Fechar</button></div>' +
+    '<button class="botao escuro o-largo" data-o="ajuste">Ajustes de resolução</button>' +
+    '<div class="o-par"><button class="botao perigo" data-o="sair">Sair</button><button class="botao" data-o="fechar">Fechar</button></div>' +
     '</div></div>';
   const caixa = lugar.querySelector('.o-lista') as HTMLElement | null;
   const atual = lugar.querySelector('.o-musica.atual') as HTMLElement | null;

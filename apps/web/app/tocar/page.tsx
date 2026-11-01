@@ -294,19 +294,13 @@ function Leitor() {
       </div>
 
       {menu ? (
-        <div className="fundo-modal" onClick={() => setMenu(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 520 }}>
-            <h2>Opções do leitor</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '10px 14px', alignItems: 'center' }}>
-              <span>Tom desta música</span>
-              <span style={{ display: 'flex', gap: 6 }}>
-                <button className="btn ciano pq" onClick={() => musica && setTons({ ...tons, [musica.id]: passos - 1 })}>- Tom</button>
-                <button className="btn ciano pq" onClick={() => musica && setTons({ ...tons, [musica.id]: passos + 1 })}>+ Tom</button>
-              </span>
-              <span>Tamanho da fonte</span>
-              <select className="campo" value={prefs.tamanho} onChange={e => mudar({ tamanho: Number(e.target.value) })}>
-                {TAMANHOS.map((_, i) => <option key={i} value={i + 1}>{i + 1}{i === 1 ? ' (normal)' : ''}</option>)}
-              </select>
+        // Caixa no canto de cima à direita, como no Toque Fácil: a cifra continua aparecendo do lado.
+        <div style={{ position: 'fixed', inset: 0, zIndex: 100 }} onClick={() => setMenu(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ position: 'absolute', top: 6, right: 6, width: 380, maxWidth: 'calc(100vw - 12px)', maxHeight: 'calc(100vh - 12px)', padding: '14px 16px', border: '1px solid #3a3f44', boxShadow: '0 6px 24px rgba(0,0,0,.6)' }}>
+            <h2 style={{ fontSize: 17, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{musica?.titulo ?? 'Opções do leitor'}</h2>
+            <MaisMenos rotulo={'Tom' + (tom ? ': ' + tom : '')} aoMenos={() => musica && setTons({ ...tons, [musica.id]: passos - 1 })} aoMais={() => musica && setTons({ ...tons, [musica.id]: passos + 1 })} />
+            <MaisMenos rotulo={'Fonte ' + prefs.tamanho} aoMenos={() => mudar({ tamanho: Math.max(1, prefs.tamanho - 1) })} aoMais={() => mudar({ tamanho: Math.min(TAMANHOS.length, prefs.tamanho + 1) })} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 180px', gap: '10px 12px', alignItems: 'center', marginTop: 8, fontSize: 15 }}>
               <span>Ajustes de resolução ({grade.cols} × {grade.rows})</span>
               <button className="btn verde pq" onClick={() => { setMenu(false); setAjustando(true); }}>Ajustar na tela</button>
               <span>Letra e cifras</span>
@@ -352,6 +346,18 @@ function Leitor() {
           </div>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+/** "−  Tom: G  +", como na caixa do Toque Fácil. */
+function MaisMenos({ rotulo, aoMenos, aoMais }: { rotulo: string; aoMenos: () => void; aoMais: () => void }) {
+  const redondo: React.CSSProperties = { width: 40, height: 40, borderRadius: 20, border: 'none', background: '#2fb344', color: '#fff', fontSize: 24, fontWeight: 700, lineHeight: '38px', cursor: 'pointer', padding: 0 };
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', margin: '6px 0' }}>
+      <button style={redondo} onClick={aoMenos} aria-label={'Menos ' + rotulo}>−</button>
+      <b style={{ flex: 1, textAlign: 'center', fontSize: 17 }}>{rotulo}</b>
+      <button style={redondo} onClick={aoMais} aria-label={'Mais ' + rotulo}>+</button>
     </div>
   );
 }
