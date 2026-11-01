@@ -83,10 +83,30 @@ export function chordsOf(text: string): { chord: string; col: number }[] | null 
   return out.length ? out : null;
 }
 
+// Nomes de parte que às vezes vêm sem colchete e sem dois-pontos: "Intro Am F C G".
+const PARTE = /^(?:intro(?:du[cç][aã]o)?|solo|riff|final|ponte|refr[aã]o|pr[eé]-?refr[aã]o|interl[uú]dio|base|outro|coda|passagem|levada|dedilhado)$/i;
+// Linhas com dois-pontos que continuam sendo texto comum (o tom escrito na letra não vira acorde laranja).
+const NAO_E_PARTE = /^(?:tom|capo(?:traste)?|afina[cç][aã]o|tuning)$/i;
+
+/**
+ * Título de parte no começo da linha, com os acordes que vierem depois:
+ * "[Intro] Am F", "Intro: Am F C G", "Primeira Parte:" e "Solo Am G".
+ * `rest` é sempre o fim da própria linha (o que vem depois do título).
+ */
 function labelOf(text: string): { label: string; rest: string } | null {
   const m = /^\s*\[([^\]\r\n]+)\](.*)$/.exec(text);
-  if (!m || parseChord(m[1].trim())) return null;
-  return { label: m[1].trim(), rest: m[2] };
+  if (m) return parseChord(m[1].trim()) ? null : { label: m[1].trim(), rest: m[2] };
+  const c = /^\s*([^\s:[\]|(/][^:[\]|]{0,28}?)\s*:(.*)$/.exec(text);
+  if (c) {
+    const label = c[1].trim();
+    if (/[A-Za-zÀ-ÿ]/.test(label) && !parseChord(label) && !NAO_E_PARTE.test(label)) {
+      // Com acordes depois ("Intro: Am F"), ou sozinho e curto ("Primeira Parte:").
+      if (c[2].trim() ? chordsOf(c[2]) : label.split(/\s+/).length <= 4) return { label, rest: c[2] };
+    }
+  }
+  const w = /^\s*(\S+)(\s.*)$/.exec(text);
+  if (w && PARTE.test(w[1]) && chordsOf(w[2])) return { label: w[1], rest: w[2] };
+  return null;
 }
 
 /** Classifica cada linha do texto. Os marcadores de refrão e 2ª voz somem e viram atributos. */
