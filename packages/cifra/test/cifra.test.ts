@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   chordShape, chordsOf, gridFor, isTabLine, layoutBlocks, layoutPages, listChords, paginate, readSource, transposeChord,
   transposeSource, chordIntervals, passosDoShow, layoutRows, deToqueFacil,
+  molduraDeAjuste,
 } from '../src';
 import { DEMO_MUSICAS } from '../src/demo';
 
@@ -95,6 +96,8 @@ describe('páginas', () => {
     expect(g.cols).toBe(30);
     expect(gridFor(400, 800, 22, { cols: 1 }).cols).toBe(31);
     expect(gridFor(400, 800, 22, { rows: -2 }).rows).toBe(g.rows - 2);
+    // Mudar a largura não muda a altura.
+    expect(gridFor(400, 800, 22, { cols: 5 }).rows).toBe(g.rows);
   });
 });
 
@@ -199,5 +202,13 @@ describe('letra vinda do Toque Fácil', () => {
   it('não mexe numa letra sem marcas', () => {
     const tf = '100% Você\nTom: A\n\n[Intro] E  A  C#m  D  E\n        A  C#m  D  E\n\n( A  C#m  D  E )';
     expect(deToqueFacil(tf)).toBe(tf);
+  });
+});
+
+describe('ajustes de resolução', () => {
+  it('moldura de X ocupa a grade inteira', () => {
+    const m = molduraDeAjuste(10, 4);
+    expect(m.map(r => r.text)).toEqual(['XXXXXXXXXX', 'X        X', 'X        X', 'XXXXXXXXXX']);
+    expect(m.every(r => r.text.length === 10)).toBe(true);
   });
 });

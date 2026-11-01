@@ -1,5 +1,6 @@
 // Configurações do leitor, no jeito do app do Toque Fácil: cores, fonte, exibição e ajustes de resolução.
 import { CORES, INSTRUMENTOS, TIPOS_REFRAO, layoutPages, type Aparencia } from '@palco/cifra';
+import { router } from 'expo-router';
 import { useState, type ReactNode } from 'react';
 import { Alert, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -102,6 +103,7 @@ export default function Configuracoes() {
           <>
             <Text style={[s.rotulo, { marginBottom: 4 }]}>Ajustes de resolução</Text>
             <Text style={[s.suave, { marginBottom: 8 }]}>Se a letra ficar cortada na direita ou sobrar espaço, ajuste quantos caracteres cabem por linha e quantas linhas por página.</Text>
+            <Botao rotulo="Ajustar vendo na tela" pequeno onPress={() => router.push({ pathname: '/leitor', params: { ajuste: '1' } })} estilo={{ alignSelf: 'flex-start', marginBottom: 12 }} />
             <Resolucao titulo="Modo retrato (em pé)" valor={config.retrato} aoMudar={v => mudarConfig({ retrato: v })} />
             <Resolucao titulo="Modo paisagem (deitado)" valor={config.paisagem} aoMudar={v => mudarConfig({ paisagem: v })} />
             <Linha rotulo="Config padrão" ajuda="Volta todas as configurações ao original">

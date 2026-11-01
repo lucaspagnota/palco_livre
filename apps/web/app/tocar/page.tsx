@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  APARENCIA_PADRAO, CORES, TAMANHOS, TIPOS_REFRAO, VERSAO_CORES, aparenciaGuardada, gridFor, layoutPages, passosDoShow, transposeKey,
+  APARENCIA_PADRAO, CORES, TAMANHOS, TIPOS_REFRAO, VERSAO_CORES, aparenciaGuardada, gridFor, layoutPages, molduraDeAjuste, passosDoShow, transposeKey,
   type Aparencia,
 } from '@palco/cifra';
 import { Tela, recuoDoMarcador } from '@/components/Tela';
@@ -53,6 +53,8 @@ function Leitor() {
   const [pagina, setPagina] = useState(0);
   const [tons, setTons] = useState<Record<string, number>>({});
   const [menu, setMenu] = useState(false);
+  // Ajustes de resolução: moldura de X no lugar da cifra para acertar caracteres e linhas na tela.
+  const [ajustando, setAjustando] = useState(false);
   const [area, setArea] = useState({ w: 0, h: 0 });
   const [hora, setHora] = useState('');
   const [caixa, setCaixa] = useState<HTMLDivElement | null>(null);
@@ -159,14 +161,14 @@ function Leitor() {
 
   useEffect(() => {
     const tecla = (e: KeyboardEvent) => {
-      if (menu || e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return;
+      if (menu || ajustando || e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return;
       if (AVANCAR.has(e.key)) { e.preventDefault(); avancar(); }
       else if (VOLTAR.has(e.key)) { e.preventDefault(); voltar(); }
       else if (e.key === 'Escape') setMenu(true);
     };
     window.addEventListener('keydown', tecla);
     return () => window.removeEventListener('keydown', tecla);
-  }, [avancar, voltar, menu]);
+  }, [avancar, voltar, menu, ajustando]);
 
   // Mantém a tela acesa enquanto o leitor está aberto (quando o navegador permite).
   useEffect(() => {
@@ -222,15 +224,38 @@ function Leitor() {
         {erro ? <p style={{ color: '#f88' }}>{erro}</p> : null}
         {!musicas ? <p style={{ color: '#888' }}>Carregando…</p> : musicas.length === 0 ? <p style={{ color: '#888' }}>Este repertório ainda não tem músicas.</p> : (
           <div style={{ display: 'flex', gap: margem }}>
-            {area.w > 0 && paginas.slice(pagina, pagina + porVez).map((p, i) => (
+            {area.w > 0 && (ajustando ? Array.from({ length: porVez }, () => molduraDeAjuste(grade.cols, grade.rows)) : paginas.slice(pagina, pagina + porVez)).map((p, i) => (
               <Tela key={pagina + i} linhas={p} aparencia={a} fonte={grade.font} altura={grade.line} largura={larguraPagina} recuo={recuo} />
             ))}
           </div>
         )}
-        <div style={{ position: 'absolute', inset: 0, display: 'flex' }}>
-          <div style={{ flex: 1 }} onClick={voltar} aria-label="Página anterior" role="button" />
-          <div style={{ flex: 1 }} onClick={avancar} aria-label="Próxima página" role="button" />
-        </div>
+        {ajustando ? (
+          <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', pointerEvents: 'none' }}>
+            <div style={{ pointerEvents: 'auto', background: '#1b1d1f', color: '#fff', border: `2px solid ${verde}`, borderRadius: 16, padding: 18, width: 380, maxWidth: '90%', display: 'grid', gap: 12 }}>
+              <strong style={{ fontSize: 19 }}>Ajustes de resolução</strong>
+              <span style={{ color: '#bbb' }}>Mude a largura e a altura até a moldura de X ocupar toda a área da letra cifrada.</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ flex: 1 }}>Largura: <b>{grade.cols}</b> caracteres</span>
+                <button className="btn verde pq" onClick={() => mudar({ ajusteCols: prefs.ajusteCols - 1 })} aria-label="Menos caracteres">−</button>
+                <button className="btn verde pq" onClick={() => mudar({ ajusteCols: prefs.ajusteCols + 1 })} aria-label="Mais caracteres">+</button>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ flex: 1 }}>Altura: <b>{grade.rows}</b> linhas</span>
+                <button className="btn verde pq" onClick={() => mudar({ ajusteLinhas: prefs.ajusteLinhas - 1 })} aria-label="Menos linhas">−</button>
+                <button className="btn verde pq" onClick={() => mudar({ ajusteLinhas: prefs.ajusteLinhas + 1 })} aria-label="Mais linhas">+</button>
+              </div>
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                <button className="btn escuro" onClick={() => mudar({ ajusteCols: 0, ajusteLinhas: 0 })}>Padrão</button>
+                <button className="btn laranja-claro" onClick={() => setAjustando(false)}>Ok</button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex' }}>
+            <div style={{ flex: 1 }} onClick={voltar} aria-label="Página anterior" role="button" />
+            <div style={{ flex: 1 }} onClick={avancar} aria-label="Próxima página" role="button" />
+          </div>
+        )}
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', borderTop: '2px solid #2f4f4f', padding: '3px 10px', color: verde, fontWeight: 700, fontSize: 14 }}>
@@ -281,16 +306,8 @@ function Leitor() {
               <select className="campo" value={prefs.tamanho} onChange={e => mudar({ tamanho: Number(e.target.value) })}>
                 {TAMANHOS.map((_, i) => <option key={i} value={i + 1}>{i + 1}{i === 1 ? ' (normal)' : ''}</option>)}
               </select>
-              <span>Caracteres por linha ({grade.cols})</span>
-              <span style={{ display: 'flex', gap: 6 }}>
-                <button className="btn verde pq" onClick={() => mudar({ ajusteCols: prefs.ajusteCols - 1 })}>−</button>
-                <button className="btn verde pq" onClick={() => mudar({ ajusteCols: prefs.ajusteCols + 1 })}>+</button>
-              </span>
-              <span>Linhas por página ({grade.rows})</span>
-              <span style={{ display: 'flex', gap: 6 }}>
-                <button className="btn verde pq" onClick={() => mudar({ ajusteLinhas: prefs.ajusteLinhas - 1 })}>−</button>
-                <button className="btn verde pq" onClick={() => mudar({ ajusteLinhas: prefs.ajusteLinhas + 1 })}>+</button>
-              </span>
+              <span>Ajustes de resolução ({grade.cols} × {grade.rows})</span>
+              <button className="btn verde pq" onClick={() => { setMenu(false); setAjustando(true); }}>Ajustar na tela</button>
               <span>Letra e cifras</span>
               <select className="campo" value={prefs.mostrar} onChange={e => mudar({ mostrar: e.target.value as Prefs['mostrar'] })}>
                 <option value="tudo">Exibir a letra e as cifras</option>
