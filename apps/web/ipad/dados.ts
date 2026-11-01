@@ -82,6 +82,8 @@ export interface Config {
   soLetra: boolean;
   duasPaginas: boolean;
   instrucoesVistas: boolean;
+  /** Modo escuro das telas de lista (botão do sol e da lua). O leitor é sempre preto. */
+  escuro: boolean;
   /** Ajustes de resolução: caracteres e linhas a mais (ou a menos) em pé e deitado. */
   retrato: Ajuste;
   paisagem: Ajuste;
@@ -98,6 +100,7 @@ export function lerConfig(): Config {
     soLetra: !!c.soLetra,
     duasPaginas: c.duasPaginas !== false,
     instrucoesVistas: !!c.instrucoesVistas,
+    escuro: !!c.escuro,
     retrato: ajusteDe(c.retrato),
     paisagem: ajusteDe(c.paisagem),
   };
