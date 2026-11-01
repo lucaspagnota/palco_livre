@@ -95,8 +95,31 @@ function desenhar() {
   else if (tela.nome === 'repertorio') desenharRepertorio(tela.id);
 }
 
+// Sol no modo claro, lua no modo escuro (os mesmos desenhos do site e do app).
+const SOL = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2" fill="currentColor"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.55 1.55M17.15 17.15l1.55 1.55M5.3 18.7l1.55-1.55M17.15 6.85l1.55-1.55"/></svg>';
+const LUA = '<svg width="26" height="26" viewBox="0 0 24 24"><path d="M20.2 14.6A8.4 8.4 0 0 1 9.4 3.8a8.4 8.4 0 1 0 10.8 10.8Z" fill="currentColor"/></svg>';
+
+function aplicarTema() {
+  // A classe fica no <html>; o script no começo da página já põe antes de desenhar (sem piscar branco).
+  document.documentElement.className = config.escuro ? 'tema-escuro' : '';
+}
+
+function botaoTema() {
+  const dica = config.escuro ? 'Modo escuro (toque para clarear)' : 'Modo claro (toque para escurecer)';
+  return '<button class="botao-tema" data-acao="tema" aria-label="' + dica + '">' + (config.escuro ? LUA : SOL) + '</button>';
+}
+
+function trocarTema() {
+  config.escuro = !config.escuro;
+  gravarConfig(config);
+  aplicarTema();
+  // Só troca o desenho do botão: a lista não é desenhada de novo e fica onde estava.
+  const botoes = document.querySelectorAll('.botao-tema');
+  for (let i = 0; i < botoes.length; i++) botoes[i].outerHTML = botaoTema();
+}
+
 function topo(direita: string, esquerda = '') {
-  return '<div class="topo">' + (esquerda || '<div class="marca"><span class="logo"><i class="tri"></i></span> Palco Livre</div>') + '<div class="topo-botoes">' + direita + '</div></div>';
+  return '<div class="topo">' + (esquerda || '<div class="marca"><span class="logo"><i class="tri"></i></span> Palco Livre</div>') + '<div class="topo-botoes">' + direita + botaoTema() + '</div></div>';
 }
 
 function desenharEntrar() {
@@ -375,6 +398,7 @@ app.addEventListener('click', e => {
   const acao = el.getAttribute('data-acao');
   const id = el.getAttribute('data-id') || '';
   if (acao === 'atualizar') atualizar();
+  else if (acao === 'tema') trocarTema();
   else if (acao === 'aba-repertorios' || acao === 'aba-musicas') {
     const itens = document.getElementById('itens');
     if (itens) rolagem[aba] = itens.scrollTop;
@@ -721,6 +745,7 @@ if (cache) {
 }
 
 // ---------- Começo ----------
+aplicarTema();
 if (sessaoGuardada()) {
   tela = { nome: 'lista' };
   desenhar();
