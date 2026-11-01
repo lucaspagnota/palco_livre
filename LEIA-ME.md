@@ -109,6 +109,17 @@ Com internet, ele guarda no aparelho todas as músicas e repertórios da conta. 
 ficou guardado; para salvar alguma mudança, precisa estar conectado. Quem cuida disso é `apps/web/public/sw.js`
 (as telas) e `apps/web/lib/store-offline.ts` (as músicas e repertórios).
 
+### iPad antigo (iOS 9, como o iPad 2)
+
+O site completo não abre no Safari do iOS 9. Para esses aparelhos existe um leitor separado e leve em
+**/ipad** (ex.: https://palco-livre-ten.vercel.app/ipad): só Repertórios, Músicas e o leitor, sem editar nada.
+Ele baixa os repertórios e as cifras deles em **Atualizar** e depois funciona sem internet.
+
+- Código em `apps/web/ipad` (usa o mesmo `packages/cifra`). Depois de mudar algo ali ou na cifra, rode
+  `npm run build:ipad`: ele gera `apps/web/public/ipad/index.html` em JavaScript antigo (ES5) e confere que o iOS 9 entende.
+- O iPad fala com o banco por `/sb/...`, que o site repassa ao Supabase (`next.config.ts`).
+- Para deixar o iPad só nisso: Ajustes › Geral › Acessibilidade › **Acesso Guiado** e três cliques no botão Home com o leitor aberto.
+
 ## Como a banda usa
 
 1. Cada integrante cria a conta no site (o app usa o mesmo e-mail e senha).
