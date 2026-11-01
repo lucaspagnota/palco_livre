@@ -308,42 +308,46 @@ function Painel() {
 
       {musica ? (
       <Modal visible={opcoes} transparent animationType="fade" onRequestClose={() => setOpcoes(false)} supportedOrientations={['portrait', 'landscape']}>
-        <Pressable style={s.fundoModal} onPress={() => setOpcoes(false)}>
-          <Pressable style={[s.modal, { padding: 18, gap: 14 }]} onPress={() => undefined}>
-            <Text style={[s.tituloModal, { padding: 0 }]}>{musica.titulo}</Text>
-            <LinhaOpcao rotulo={`Tom${tom ? ': ' + tom : ''}`}>
-              <Redondo icone="menos" onPress={() => mudarTom(musica.id, passos - 1)} rotulo="Baixar meio tom" />
-              <Redondo icone="mais" onPress={() => mudarTom(musica.id, passos + 1)} rotulo="Subir meio tom" />
-            </LinhaOpcao>
-            <LinhaOpcao rotulo={`Tamanho da fonte: ${config.tamanho}`}>
-              <Redondo icone="menos" onPress={() => mudarConfig({ tamanho: Math.max(1, config.tamanho - 1) })} rotulo="Diminuir" />
-              <Redondo icone="mais" onPress={() => mudarConfig({ tamanho: Math.min(5, config.tamanho + 1) })} rotulo="Aumentar" />
-            </LinhaOpcao>
-            <Caixa marcada={config.mostrar === 'letra'} aoMudar={v => mudarConfig({ mostrar: v ? 'letra' : 'tudo' })} rotulo="Só a letra (esconder cifras)" />
-            <Caixa marcada={config.modo === 'rolagem'} aoMudar={v => mudarConfig({ modo: v ? 'rolagem' : 'paginacao' })} rotulo="Rolagem em vez de páginas" />
-            <Caixa marcada={config.colunaAcordes} aoMudar={v => mudarConfig({ colunaAcordes: v })} rotulo="Coluna dos acordes" />
-            {musicas.length > 1 ? (
-              <ScrollView style={{ maxHeight: 220, borderTopWidth: 1, borderTopColor: cor.linha }}>
-                {musicas.map((m, i) => (
-                  <View key={m.id + i}>
-                    {show[i]?.bloco && show[i].bloco !== show[i - 1]?.bloco ? (
-                      <Text style={{ color: '#8ce99a', fontFamily: fonte.negrito, fontSize: 14, paddingTop: 10 }}>{show[i].bloco!.toUpperCase()}</Text>
-                    ) : null}
-                    <Pressable onPress={() => { irPara(i); setOpcoes(false); }} style={{ paddingVertical: 10, flexDirection: 'row', gap: 10 }}>
-                      <Text style={[s.suave, { width: 26, textAlign: 'right' }]}>{show[i]?.numero ?? i + 1}</Text>
-                      <Text numberOfLines={1} style={[s.texto, { flex: 1 }, i === atual && { color: cor.marca, fontFamily: fonte.negrito }]}>{m.titulo}</Text>
-                    </Pressable>
-                    {show[i]?.pausaDepois ? <Text style={{ color: '#ffd43b', fontFamily: fonte.negrito, fontSize: 14, paddingLeft: 36, paddingBottom: 6 }}>{show[i].pausaDepois}</Text> : null}
-                  </View>
-                ))}
-              </ScrollView>
-            ) : null}
-            <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
+        {/* Caixa no canto de cima à direita, como no Toque Fácil: a cifra continua aparecendo do lado. */}
+        <Pressable style={{ flex: 1 }} onPress={() => setOpcoes(false)}>
+          <Pressable
+            onPress={() => undefined}
+            style={[s.modal, {
+              position: 'absolute', top: insets.top + 6, right: 6, alignSelf: 'auto', maxWidth: undefined,
+              width: Math.min(tablet ? 340 : 300, janela.width - 24), maxHeight: janela.height - insets.top - insets.bottom - 12,
+              paddingVertical: 0, borderWidth: 1, borderColor: '#3a3f44',
+            }]}
+          >
+            <ScrollView contentContainerStyle={{ padding: 14, gap: 12 }}>
+              <Text numberOfLines={1} style={[s.tituloModal, { padding: 0, fontSize: 16 }]}>{musica.titulo}</Text>
+              <MaisMenos rotulo={`Tom${tom ? ': ' + tom : ''}`} aoMenos={() => mudarTom(musica.id, passos - 1)} aoMais={() => mudarTom(musica.id, passos + 1)} menos="Baixar meio tom" mais="Subir meio tom" />
+              <MaisMenos rotulo={`Fonte ${config.tamanho}`} aoMenos={() => mudarConfig({ tamanho: Math.max(1, config.tamanho - 1) })} aoMais={() => mudarConfig({ tamanho: Math.min(5, config.tamanho + 1) })} menos="Diminuir a letra" mais="Aumentar a letra" />
+              <Caixa marcada={config.mostrar === 'letra'} aoMudar={v => mudarConfig({ mostrar: v ? 'letra' : 'tudo' })} rotulo="Só a letra" />
+              <Caixa marcada={config.modo === 'rolagem'} aoMudar={v => mudarConfig({ modo: v ? 'rolagem' : 'paginacao' })} rotulo="Rolagem em vez de páginas" />
+              <Caixa marcada={config.colunaAcordes} aoMudar={v => mudarConfig({ colunaAcordes: v })} rotulo="Coluna dos acordes" />
+              {musicas.length > 1 ? (
+                <ScrollView nestedScrollEnabled style={{ maxHeight: 200, borderTopWidth: 1, borderBottomWidth: 1, borderColor: cor.linha }}>
+                  {musicas.map((m, i) => (
+                    <View key={m.id + i}>
+                      {show[i]?.bloco && show[i].bloco !== show[i - 1]?.bloco ? (
+                        <Text style={{ color: '#8ce99a', fontFamily: fonte.negrito, fontSize: 13, paddingTop: 8 }}>{show[i].bloco!.toUpperCase()}</Text>
+                      ) : null}
+                      <Pressable onPress={() => { irPara(i); setOpcoes(false); }} style={{ paddingVertical: 8, flexDirection: 'row', gap: 8 }}>
+                        <Text style={[s.suave, { width: 24, textAlign: 'right' }]}>{show[i]?.numero ?? i + 1}</Text>
+                        <Text numberOfLines={1} style={[s.texto, { flex: 1, fontSize: 15 }, i === atual && { color: cor.marca, fontFamily: fonte.negrito }]}>{m.titulo}</Text>
+                      </Pressable>
+                      {show[i]?.pausaDepois ? <Text style={{ color: '#ffd43b', fontFamily: fonte.negrito, fontSize: 13, paddingLeft: 32, paddingBottom: 4 }}>{show[i].pausaDepois}</Text> : null}
+                    </View>
+                  ))}
+                </ScrollView>
+              ) : null}
               <Botao rotulo="Ajustes de resolução" tipo="escuro" pequeno onPress={() => { setOpcoes(false); setAjustando(true); }} />
               <Botao rotulo="Configurações" icone="engrenagem" tipo="escuro" pequeno onPress={() => { setOpcoes(false); router.push('/configuracoes'); }} />
-              <Botao rotulo="Sair do leitor" icone="sair" tipo="perigo" pequeno onPress={() => { setOpcoes(false); sair(); }} />
-              <Botao rotulo="Fechar" pequeno onPress={() => setOpcoes(false)} />
-            </View>
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <Botao rotulo="Sair" icone="sair" tipo="perigo" pequeno estilo={{ flex: 1 }} onPress={() => { setOpcoes(false); sair(); }} />
+                <Botao rotulo="Fechar" pequeno estilo={{ flex: 1 }} onPress={() => setOpcoes(false)} />
+              </View>
+            </ScrollView>
           </Pressable>
         </Pressable>
       </Modal>
@@ -385,11 +389,13 @@ function AjusteResolucao({ aoMudar, aoPadrao, aoFechar }: {
   );
 }
 
-function LinhaOpcao({ rotulo, children }: { rotulo: string; children: React.ReactNode }) {
+/** "−  Tom: G  +", como na caixa do Toque Fácil. */
+function MaisMenos({ rotulo, aoMenos, aoMais, menos, mais }: { rotulo: string; aoMenos: () => void; aoMais: () => void; menos: string; mais: string }) {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-      <Text style={[s.texto, { flex: 1 }]}>{rotulo}</Text>
-      {children}
+    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+      <Redondo icone="menos" onPress={aoMenos} rotulo={menos} />
+      <Text numberOfLines={1} style={[s.texto, { flex: 1, textAlign: 'center', fontFamily: fonte.negrito, fontSize: 17 }]}>{rotulo}</Text>
+      <Redondo icone="mais" onPress={aoMais} rotulo={mais} />
     </View>
   );
 }
