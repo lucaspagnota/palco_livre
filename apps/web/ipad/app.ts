@@ -351,7 +351,7 @@ function montarMusica() {
   const w = area.clientWidth;
   const h = area.clientHeight;
   const paisagem = w > h;
-  const tamanho = (TAMANHOS[config.tamanho - 1] || 22) * 1.2;
+  const tamanho = (TAMANHOS[config.tamanho - 1] || TAMANHOS[1]) * 1.2;
   const recuo = Math.round(tamanho * 0.4);
   const duas = config.duasPaginas && paisagem && w >= 800;
   L.porVez = duas ? 2 : 1;

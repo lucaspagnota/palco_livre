@@ -79,7 +79,7 @@ function Painel() {
   // Grade de caracteres para o tamanho da tela (com os ajustes de resolução).
   const paisagem = area.w > area.h;
   const tablet = Math.min(janela.width, janela.height) >= 600;
-  const tamanho = (TAMANHOS[config.tamanho - 1] ?? 22) * (tablet ? 1.2 : 1);
+  const tamanho = (TAMANHOS[config.tamanho - 1] ?? TAMANHOS[1]) * (tablet ? 1.2 : 1);
   const colunaAcordes = config.colunaAcordes && area.w >= 480 ? LARGURA_ACORDES : 0;
   const recuo = recuoDoMarcador(a, tamanho);
   const duas = config.duasPaginas && config.modo === 'paginacao' && paisagem && area.w >= 800;
