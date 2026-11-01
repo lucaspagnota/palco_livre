@@ -9,7 +9,7 @@ h1 { font-size: 26px; margin: 0 0 6px; }
 
 .topo { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; background: #0b1d33; color: #fff; padding: 12px 16px; padding-top: 22px; min-height: 70px; }
 .marca { -webkit-flex: 1; flex: 1; font-size: 24px; font-weight: bold; color: #ffd23f; }
-.logo { display: inline-block; width: 34px; height: 34px; line-height: 34px; text-align: center; border-radius: 17px 17px 17px 4px; background: #ffd23f; color: #0b1d33; font-size: 16px; margin-right: 8px; vertical-align: middle; }
+.logo { display: inline-block; width: 34px; height: 34px; line-height: 34px; text-align: center; padding-left: 3px; border-radius: 17px 17px 17px 4px; background: #ffd23f; color: #0b1d33; font-size: 16px; margin-right: 8px; vertical-align: middle; }
 .topo > .botao { margin-right: auto; }
 .topo-botoes { display: -webkit-flex; display: flex; }
 .topo-botoes .botao { margin-left: 10px; }
@@ -106,3 +106,9 @@ h1 { font-size: 26px; margin: 0 0 6px; }
 .i-caixa { -webkit-flex: 1; flex: 1; margin: 0 5px; border: 2px dashed #ff7a45; border-radius: 12px; display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-justify-content: center; justify-content: center; font-weight: bold; font-size: 20px; padding: 10px; }
 .instrucoes p { margin: 8px 0 14px; }
 .instrucoes .botao { -webkit-align-self: center; align-self: center; padding: 12px 40px; }
+
+/* Triângulo de "tocar" desenhado com borda: o caractere ▶ vira emoji azul no iOS. */
+.tri { display: inline-block; width: 0; height: 0; border-style: solid; border-width: 0.4em 0 0.4em 0.68em; border-color: transparent transparent transparent currentColor; vertical-align: middle; position: relative; top: -0.08em; }
+.tri.esq { border-width: 0.4em 0.68em 0.4em 0; border-color: transparent currentColor transparent transparent; }
+.play .tri { left: 2px; }
+.i-caixa .tri { font-size: 30px; }
