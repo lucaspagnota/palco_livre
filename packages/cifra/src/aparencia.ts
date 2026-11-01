@@ -57,8 +57,11 @@ export const TIPOS_REFRAO: { id: TipoRefrao; nome: string }[] = [
   { id: 'normal', nome: 'Sem destaque' },
 ];
 
-/** Tamanhos da fonte do leitor (1 a 5), em pontos de tela. */
-export const TAMANHOS = [18, 22, 26, 30, 35];
+/**
+ * Tamanhos da fonte do leitor (1 a 5), em pontos de tela. No tablet o leitor usa 20% a mais.
+ * Diminuídos em 01/11/2026 (antes 18, 22, 26, 30, 35): o 2 agora fica perto do tamanho do Toque Fácil no tablet.
+ */
+export const TAMANHOS = [13, 16, 19, 23, 28];
 
 export function nomeDaCor(valor: string) {
   return CORES.find(c => c.valor.toLowerCase() === valor.toLowerCase())?.nome ?? valor;

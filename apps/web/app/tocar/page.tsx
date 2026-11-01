@@ -122,7 +122,7 @@ function Leitor() {
   const passos = musica ? tons[musica.id] ?? 0 : 0;
   const duas = prefs.duasPaginas && area.w > 700;
   const larguraPagina = duas ? (area.w - margem) / 2 : area.w;
-  const tamanho = TAMANHOS[prefs.tamanho - 1] ?? 22;
+  const tamanho = TAMANHOS[prefs.tamanho - 1] ?? TAMANHOS[1];
   const recuo = recuoDoMarcador(prefs.aparencia, tamanho);
   const grade = gridFor(Math.max(100, larguraPagina - recuo), Math.max(100, area.h - 8), tamanho, { cols: prefs.ajusteCols, rows: prefs.ajusteLinhas });
   const tom = musica?.tom ? transposeKey(musica.tom, passos) : '';
