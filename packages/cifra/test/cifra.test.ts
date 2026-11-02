@@ -124,6 +124,28 @@ describe('acordes das músicas do Lucas (prints de 02/11)', () => {
   });
 });
 
+describe('refrão com "|" no começo da linha', () => {
+  it('a linha que começa com "|" vira refrão, sem o "|"', () => {
+    const linhas = readSource('[Primeira Parte]\n|[Solo] 4T DEPOIS DO SOLO\n|  G      D\n|Eu quero sempre mais\nLetra normal');
+    expect(linhas.map(l => [l.kind, l.text, l.refrao])).toEqual([
+      ['label', '[Primeira Parte]', false],
+      ['label', '[Solo] 4T DEPOIS DO SOLO', true],
+      ['chords', '  G      D', true],
+      ['lyric', 'Eu quero sempre mais', true],
+      ['lyric', 'Letra normal', false],
+    ]);
+  });
+
+  it('tablatura e compassos com barras continuam como eram', () => {
+    expect(readSource('| G | D | 2x').map(l => [l.kind, l.refrao])).toEqual([['chords', false]]);
+    expect(readSource('|---3---2---|').map(l => [l.kind, l.refrao])).toEqual([['tab', false]]);
+  });
+
+  it('transpõe o refrão e mantém o "|"', () => {
+    expect(transposeSource('|[Intro] C  G\n|  Am\n|Eu quero', 2)).toBe('|[Intro] D  A\n|  Bm\n|Eu quero');
+  });
+});
+
 describe('transposição', () => {
   it('mantém a coluna dos acordes', () => {
     const src = 'C       G\nEu quero sempre mais';

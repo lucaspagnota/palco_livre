@@ -240,6 +240,7 @@ function EditorMusica() {
             <li>Escreva ou cole a letra cifrada à esquerda, com os acordes na linha de cima da letra. Use espaços para alinhar o acorde em cima da sílaba.</li>
             <li>Partes entre colchetes, como <code>[Refrão]</code> ou <code>[Intro] C G Am</code>, aparecem como no leitor.</li>
             <li>Selecione linhas e clique em <b>Refrão</b> ou <b>2ª Voz</b> para destacar. Clique de novo para tirar.</li>
+            <li>Ou comece a linha com <code>|</code> para ela ser refrão, como em <code>|[Solo] 4T DEPOIS DO SOLO</code>.</li>
             <li><b>- Tom</b> e <b>+ Tom</b> mudam todos os acordes e o tom da música.</li>
             <li><b>Tablaturas</b> coloca um modelo de tablatura na linha do cursor.</li>
             <li>Comece uma linha com <code>//</code> para escrever uma anotação (aparece em cinza no leitor).</li>
