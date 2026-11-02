@@ -186,6 +186,18 @@ function labelOf(text: string): { label: string; rest: string } | null {
   return null;
 }
 
+/**
+ * Linha que começa com "|" é refrão, como no Toque Fácil: "|[Solo] 4T DEPOIS DO SOLO", "|  G   D", "|Eu quero sempre mais".
+ * Devolve a linha sem o "|", ou null se não for refrão. Continuam como estão a tablatura ("|---3---|")
+ * e os compassos com várias barras ("| G | D |").
+ */
+export function refraoDaLinha(raw: string): string | null {
+  if (!raw.startsWith('|') || raw.startsWith('||')) return null;
+  const resto = raw.slice(1);
+  if (resto.includes('|') || isTabLine(raw)) return null;
+  return resto;
+}
+
 /** Classifica cada linha do texto. Os marcadores de refrão e 2ª voz somem e viram atributos. */
 export function readSource(source: string): SourceLine[] {
   const out: SourceLine[] = [];
@@ -196,7 +208,8 @@ export function readSource(source: string): SourceLine[] {
     if (REFRAO_END.test(raw)) { refrao = false; continue; }
     if (VOZ2_START.test(raw)) { voz2 = true; continue; }
     if (VOZ2_END.test(raw)) { voz2 = false; continue; }
-    const text = expandTabs(raw).replace(/\s+$/, '');
+    const marcada = refraoDaLinha(raw);
+    const text = expandTabs(marcada ?? raw).replace(/\s+$/, '');
     let kind: LineKind;
     if (!text.trim()) kind = 'blank';
     else if (/^\s*\/\//.test(text)) kind = 'note';
@@ -206,7 +219,7 @@ export function readSource(source: string): SourceLine[] {
       if (label) kind = label.rest.trim() && chordsOf(label.rest) ? 'labelChords' : 'label';
       else kind = chordsOf(text) ? 'chords' : 'lyric';
     }
-    out.push({ kind, text: kind === 'note' ? text.replace(/^\s*\/\/\s?/, '') : text, refrao, voz2 });
+    out.push({ kind, text: kind === 'note' ? text.replace(/^\s*\/\/\s?/, '') : text, refrao: refrao || marcada !== null, voz2 });
   }
   return out;
 }
@@ -260,7 +273,15 @@ function transposeLine(line: string, t: (c: string) => string) {
 export function transposeSource(source: string, steps: number, preferFlats?: boolean): string {
   if (!steps) return source;
   const t = (c: string) => transposeChord(c, steps, preferFlats);
-  return limparTexto(source).split('\n').map(raw => {
+  return limparTexto(source).split('\n').map(linha => {
+    // O "|" do refrão sai antes e volta depois, para não atrapalhar os acordes.
+    const marcada = refraoDaLinha(linha);
+    const raw = marcada ?? linha;
+    const volta = (s: string) => (marcada !== null ? '|' + s : s);
+    return volta(transporLinha(raw));
+  }).join('\n');
+
+  function transporLinha(raw: string) {
     const text = expandTabs(raw);
     if (!text.trim() || /^\s*\/\//.test(text) || isTabLine(text)) return raw;
     const label = labelOf(text);
@@ -270,5 +291,5 @@ export function transposeSource(source: string, steps: number, preferFlats?: boo
       return head + transposeLine(label.rest, t);
     }
     return chordsOf(text) ? transposeLine(text, t) : raw;
-  }).join('\n');
+  }
 }
