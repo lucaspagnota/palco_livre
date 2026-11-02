@@ -52,41 +52,118 @@ export function expandTabs(text: string) {
   return out;
 }
 
-/** Tira parênteses e barras em volta de um acorde: "(C", "G)", "|D|". */
+/**
+ * Acorde dentro de um pedaço de texto sem espaço, com o que estiver em volta:
+ * "(C", "G)", "|D|", "F#m7(11)", "A#7(4))". Os parênteses do próprio acorde ficam com ele.
+ */
 function bareChord(token: string): { chord: string; lead: number } | null {
-  const m = /^([|([]*)(.+?)([|)\],.]*)$/.exec(token);
-  if (!m || !parseChord(m[2])) return null;
-  return { chord: m[2], lead: m[1].length };
+  const lead = /^[|([]*/.exec(token)![0].length;
+  // Tenta primeiro o pedaço inteiro e vai tirando do fim só o que não pode ser parte do acorde.
+  for (let end = token.length; end > lead; end--) {
+    if (end < token.length && !/[|)\],.]/.test(token[end])) break;
+    const chord = token.slice(lead, end);
+    if (parseChord(chord)) return { chord, lead };
+  }
+  return null;
 }
 
-// Pedaços que podem aparecer numa linha de acordes sem ser acorde.
-const FILLER = /^(?:[|/\\\-–—.:()[\]~*>]+|\(?\d{1,2}\s*[xX×]\)?|\(?[xX×]\s*\d{1,2}\)?|N\.?C\.?)$/;
+/**
+ * Acordes grudados sem espaço: "A#7(4)A#7" ou "C/G)F". Só quando o pedaço tem número, sustenido,
+ * bemol, barra ou parênteses, para palavras como "DADA" ou "Ebe" não virarem acordes.
+ */
+function gluedChords(token: string): { chord: string; at: number }[] | null {
+  if (!/[\d#♯♭()/º°+]/.test(token)) return null;
+  const lead = /^[|([]*/.exec(token)![0].length;
+  const trail = /[|)\],.]*$/.exec(token.slice(lead))![0].length;
+  const core = token.slice(lead, token.length - trail);
+  // Divide do maior pedaço para o menor ("C7M" antes de "C7" + "M"); cada pedaço começa numa nota de A a G.
+  const split = (from: number): { chord: string; at: number }[] | null => {
+    if (from === core.length) return [];
+    for (let end = core.length; end > from; end--) {
+      if (end < core.length && !/[A-G]/.test(core[end])) continue;
+      const chord = core.slice(from, end);
+      if (!parseChord(chord)) continue;
+      const rest = split(end);
+      if (rest) return [{ chord, at: lead + from }, ...rest];
+    }
+    return null;
+  };
+  const parts = /^[A-G]/.test(core) ? split(0) : null;
+  return parts && parts.length > 1 ? parts : null;
+}
+
+// Pedaços que podem aparecer numa linha de acordes sem ser acorde: barras, "2x", "x3", "N.C.", "bis".
+const FILLER = /^(?:[|/\\\-–—.:()[\]~*>]+|\(?\d{1,2}\s*[xX×]\)?|\(?[xX×]\s*\d{1,2}\)?|N\.?C\.?|bis)$/i;
+
+// Palavras de anotação comuns entre parênteses ou colchetes no meio dos acordes: "(riff 1)", "[Frase 4]", "(2x)".
+const ANOTACAO = /^(?:\d{1,2}\s*[xX×]|[xX×]\s*\d{1,2}|riff|frase|solo|bis|repete|repetir|volta|base|intro|final|fim|ponte|refr[aã]o|pausa|para|breque|break|levada|dedilhado|arpejo|batida|palhetada|abafado|baixo|bateria|teclado|guitarra|viol[aã]o|voz|vocal|tutti|fade|ritornelo|segue|continua|\d)/i;
+
+/**
+ * Anotações entre parênteses ou colchetes numa linha de acordes ("Bm   (riff 1)", "Fm[Frase 4]", "C# (Frase 6)").
+ * Viram espaço na hora de achar os acordes, para não deixarem a linha inteira virar letra.
+ * Parênteses só com acordes dentro ("( C  A  G )", "(Bb F)") continuam sendo acordes.
+ */
+function semAnotacoes(text: string): { text: string; tirou: boolean } {
+  let tirou = false;
+  const out = text.replace(/\(([^()]*)\)|\[([^\]]*)\]/g, (all, par: string | undefined, col: string | undefined, at: number) => {
+    const inner = (par ?? col ?? '').trim();
+    if (!inner) return all;
+    // Grudado no acorde, "(11)", "(4)", "(9/13)", "(b5)", "(add9)" é parte dele. Anotação grudada tem palavra: "Fm[Frase 4]".
+    if (at > 0 && /\S/.test(text[at - 1]) && !/[A-Za-zÀ-ÿ]{3,}/.test(inner.replace(/add|sus|dim|aug|maj|omit|min/gi, '')) && !/^\d{1,2}\s*[xX×]$/.test(inner)) return all;
+    const words = inner.split(/[\s/,-]+/).filter(Boolean);
+    if (words.every(w => bareChord(w) || gluedChords(w) || FILLER.test(w))) return all;
+    if (inner.length > 24 || words.length > 4 || !/[A-Za-zÀ-ÿ]/.test(inner) && !/^\d/.test(inner)) return all;
+    tirou = true;
+    return ' '.repeat(all.length);
+  });
+  return { text: out, tirou };
+}
+
+// Acordes que também são palavras comuns em português ("E" e "A"). Com só eles na linha, a anotação
+// entre parênteses precisa ser uma das conhecidas, para "E (eu te amo)" continuar sendo letra.
+const PALAVRA = /^[AE]$/;
+
+/** Acha os acordes de uma linha sem olhar se é tablatura. */
+function scanChords(text: string): { chord: string; col: number }[] | null {
+  const body = expandTabs(text);
+  const { text: limpo, tirou } = semAnotacoes(body);
+  const out: { chord: string; col: number }[] = [];
+  for (const w of limpo.matchAll(/\S+/g)) {
+    const at = w.index ?? 0;
+    const tok = bareChord(w[0]);
+    if (tok) { out.push({ chord: tok.chord, col: at + tok.lead }); continue; }
+    if (FILLER.test(w[0])) continue;
+    const glued = gluedChords(w[0]);
+    if (glued) { for (const g of glued) out.push({ chord: g.chord, col: at + g.at }); continue; }
+    return null;
+  }
+  if (!out.length) return null;
+  if (tirou && out.every(c => PALAVRA.test(c.chord))) {
+    for (const g of body.matchAll(/\(([^()]*)\)|\[([^\]]*)\]/g)) {
+      const inner = (g[1] ?? g[2] ?? '').trim();
+      if (limpo.slice(g.index, (g.index ?? 0) + g[0].length).trim() === '' && !ANOTACAO.test(inner)) return null;
+    }
+  }
+  return out;
+}
 
 export function isTabLine(text: string) {
   if (/^\s*(?:afina[cç][aã]o|tuning)\s*[:=]/i.test(text)) return true;
-  const words = text.trim().split(/\s+/);
-  if (words.some(w => bareChord(w)) && words.every(w => FILLER.test(w) || bareChord(w))) return false;
+  if (scanChords(text)) return false;
   return /^\s*(?:[A-Ga-g][#b]?|\d{1,2})?\s*[|:]\s*[-–—\dxXhHpPbBrRsStT/\\~()=<>.*^|:]+\s*$/.test(text) && /[-–—]{2}/.test(text);
 }
 
 /** Acordes de uma linha só de acordes, com a coluna de cada um. null se a linha não for de acordes. */
 export function chordsOf(text: string): { chord: string; col: number }[] | null {
   if (!text.trim() || isTabLine(text)) return null;
-  const body = expandTabs(text);
-  const out: { chord: string; col: number }[] = [];
-  for (const w of body.matchAll(/\S+/g)) {
-    const tok = bareChord(w[0]);
-    if (tok) { out.push({ chord: tok.chord, col: (w.index ?? 0) + tok.lead }); continue; }
-    if (FILLER.test(w[0])) continue;
-    return null;
-  }
-  return out.length ? out : null;
+  return scanChords(text);
 }
 
 // Nomes de parte que às vezes vêm sem colchete e sem dois-pontos: "Intro Am F C G".
 const PARTE = /^(?:intro(?:du[cç][aã]o)?|solo|riff|final|ponte|refr[aã]o|pr[eé]-?refr[aã]o|interl[uú]dio|base|outro|coda|passagem|levada|dedilhado)$/i;
-// Linhas com dois-pontos que continuam sendo texto comum (o tom escrito na letra não vira acorde laranja).
-const NAO_E_PARTE = /^(?:tom|capo(?:traste)?|afina[cç][aã]o|tuning)$/i;
+// Linhas com dois-pontos que continuam sendo texto comum. "Tom: A" não está aqui: o tom escrito na letra
+// fica laranja como os acordes e muda junto quando a música é transposta.
+const NAO_E_PARTE = /^(?:capo(?:traste)?|afina[cç][aã]o|tuning)$/i;
 
 /**
  * Título de parte no começo da linha, com os acordes que vierem depois:
@@ -148,24 +225,31 @@ export function listChords(source: string): string[] {
 
 /** Troca os acordes de uma linha mantendo as colunas sempre que houver espaço. */
 function transposeLine(line: string, t: (c: string) => string) {
+  const text = expandTabs(line);
+  const chords = scanChords(text);
+  if (!chords) return line;
   let out = '';
-  let debt = 0;
-  for (const part of line.split(/(\s+)/)) {
-    if (!part) continue;
-    if (/^\s+$/.test(part)) {
-      const keep = Math.max(1, part.length - debt);
-      debt -= part.length - keep;
-      out += ' '.repeat(keep);
-      continue;
+  let debt = 0; // quantos caracteres a linha andou para a direita (negativo: para a esquerda)
+  let pos = 0;
+  // O espaço entre um acorde e outro encolhe ou cresce para o próximo acorde voltar à coluna dele.
+  const copy = (piece: string) => {
+    for (const part of piece.split(/(\s+)/)) {
+      if (!part) continue;
+      if (/^\s+$/.test(part) && out.length) {
+        const keep = Math.max(1, part.length - debt);
+        debt -= part.length - keep;
+        out += ' '.repeat(keep);
+      } else out += part;
     }
-    const tok = bareChord(part);
-    if (!tok) { out += part; continue; }
-    const next = t(tok.chord);
-    debt += next.length - tok.chord.length;
-    const replaced = part.slice(0, tok.lead) + next + part.slice(tok.lead + tok.chord.length);
-    if (debt < 0) { out += replaced + ' '.repeat(-debt); debt = 0; }
-    else out += replaced;
+  };
+  for (const c of chords) {
+    copy(text.slice(pos, c.col));
+    const next = t(c.chord);
+    out += next;
+    debt += next.length - c.chord.length;
+    pos = c.col + c.chord.length;
   }
+  copy(text.slice(pos));
   return out.replace(/\s+$/, '');
 }
 

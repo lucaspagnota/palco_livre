@@ -44,16 +44,83 @@ Segunda voz
     expect(kinds('Intro: Am  F  C  G  C  G')).toEqual(['labelChords']);
     expect(kinds('Solo Am  G  F')).toEqual(['labelChords']);
     expect(kinds('Primeira Parte:')).toEqual(['label']);
-    // Continua texto: o tom escrito na letra, frase com dois-pontos e palavra comum seguida de letra.
-    expect(kinds('Tom: C')).toEqual(['lyric']);
+    // Continua texto: frase com dois-pontos e palavra comum seguida de letra.
     expect(kinds('Ele disse: vem cá')).toEqual(['lyric']);
     expect(kinds('Base de tudo é você')).toEqual(['lyric']);
-    expect(transposeSource('Intro: Am  F  C  G\nTom: C', 2)).toBe('Intro: Bm  G  D  A\nTom: C');
+    expect(transposeSource('Intro: Am  F  C  G\nCapo: 2', 2)).toBe('Intro: Bm  G  D  A\nCapo: 2');
     expect(listChords('Intro: Am F C G')).toEqual(['Am', 'F', 'C', 'G']);
   });
 
   it('lista os acordes sem repetir', () => {
     expect(listChords('[Intro] C Am7 G\nC  F9\nletra\n( C  G )')).toEqual(['C', 'Am7', 'G', 'F9']);
+  });
+});
+
+describe('acordes das músicas do Lucas (prints de 02/11)', () => {
+  const kind = (t: string) => readSource(t).map(l => l.kind);
+  const acordes = (t: string) => chordsOf(t)?.map(c => c.chord) ?? null;
+
+  it('reconhece a notação brasileira de acordes', () => {
+    for (const c of [
+      'F#m7(11)', 'B7M(9)', 'B6(9)', 'A#7(4)', 'D#m7M', 'D#m5+', 'D#m6', 'A#/D', 'Bº', 'B°', 'F/C', 'C7(4)', 'F6(11+)',
+      'A5(9)', 'C#7', 'Gm/F', 'F/Eb', 'Cm7(b5)', 'G7(#9)', 'C7(9/13)', 'E7/9', 'Bm7/A', 'Gsus4', 'C(add9)', 'Dm7(9)',
+      'Bbm', 'Ebº', 'A4', 'E7(b9)', 'C7M(#11)', 'Am(7M)', 'Bø', 'C-7', 'G7(13)', 'D9', 'F9',
+    ]) expect(acordes(c), c).toEqual([c]);
+  });
+
+  it('acorde com parênteses no fim continua inteiro', () => {
+    expect(chordsOf('    F#m7(11)')).toEqual([{ chord: 'F#m7(11)', col: 4 }]);
+    expect(acordes('Am         F6(11+)                    C  E7')).toEqual(['Am', 'F6(11+)', 'C', 'E7']);
+    expect(acordes('        B7M(9)        B6(9)')).toEqual(['B7M(9)', 'B6(9)']);
+    expect(acordes('        C7(4)           C7(4)')).toEqual(['C7(4)', 'C7(4)']);
+    expect(acordes('( C7(4) )')).toEqual(['C7(4)']);
+  });
+
+  it('acordes grudados', () => {
+    expect(chordsOf('     B7M          A#7(4)A#7')).toEqual([
+      { chord: 'B7M', col: 5 }, { chord: 'A#7(4)', col: 18 }, { chord: 'A#7', col: 24 },
+    ]);
+  });
+
+  it('anotações no meio dos acordes não viram letra', () => {
+    expect(acordes('Bm                     (riff 1)')).toEqual(['Bm']);
+    expect(acordes('A                E          D (Riff 1)')).toEqual(['A', 'E', 'D']);
+    expect(acordes('      Cm (Frase 3)')).toEqual(['Cm']);
+    expect(acordes(' D#    A#/D  Cm   Fm  (Frase 4)')).toEqual(['D#', 'A#/D', 'Cm', 'Fm']);
+    expect(acordes('       D#  A#/D  Cm  Fm (Frase 4)  C# (Frase 6)')).toEqual(['D#', 'A#/D', 'Cm', 'Fm', 'C#']);
+    expect(acordes('A#/D  Cm  Fm[Frase 4]  A#7')).toEqual(['A#/D', 'Cm', 'Fm', 'A#7']);
+    expect(acordes(' A#7(4)  A#7 (2x) (2x)')).toEqual(['A#7(4)', 'A#7']);
+    expect(acordes('        G#m              D#')).toEqual(['G#m', 'D#']);
+    expect(kind('[Interlude] Dm7 F Em7 (3x)')).toEqual(['labelChords']);
+    expect(kind('[Solo] A#/D  Cm  Fm[Frase 4]  A#7')).toEqual(['labelChords']);
+    expect(kind('[Intro] F9  Gm  Bb  Gm  (Bb F)  (Gm/F F)')).toEqual(['labelChords']);
+    expect(acordes('[Intro] F9  Gm  Bb  Gm  (Bb F)'.slice(7))).toEqual(['F9', 'Gm', 'Bb', 'Gm', 'Bb', 'F']);
+    expect(kind('Introdução: ( C  A  C  A )')).toEqual(['labelChords']);
+  });
+
+  it('letra com parênteses continua letra', () => {
+    expect(kind('E (eu te amo)')).toEqual(['lyric']);
+    expect(kind('A (vida é bela)')).toEqual(['lyric']);
+    expect(kind('Radio (radio)')).toEqual(['lyric']);
+    expect(kind('(riff 2)')).toEqual(['lyric']);
+    expect(kind('A minha vida (2x)')).toEqual(['lyric']);
+    expect(kind('Dada Ebe Cada')).toEqual(['lyric']);
+    expect(kind('E (2x)')).toEqual(['chords']);
+  });
+
+  it('"Tom: A" fica laranja como acorde e muda junto ao transpor', () => {
+    expect(kind('Tom: A')).toEqual(['labelChords']);
+    expect(kind('Tom: C#m')).toEqual(['labelChords']);
+    expect(kind('Afinação: Db  Ab  Db  Gb  Bb  Eb')).toEqual(['tab']);
+    expect(transposeSource('Tom: D\n\nIntrodução: ( C  A  C  A )', 2)).toBe('Tom: E\n\nIntrodução: ( D  B  D  B )');
+    expect(layoutRows('Maniac\nTom: F', { cols: 40 }).map(r => r.kind)).toEqual(['lyric', 'chords']);
+  });
+
+  it('transpõe mantendo anotações e acordes grudados', () => {
+    expect(transposeSource('Bm                     (riff 1)', 2)).toBe('C#m                    (riff 1)');
+    expect(transposeSource('     B7M          A#7(4)A#7', 1)).toBe('     C7M          B7(4)B7');
+    expect(transposeSource('Am         F6(11+)', 2)).toBe('Bm         G6(11+)');
+    expect(transposeSource('A#/D  Cm  Fm[Frase 4]', 2)).toBe('C/E   Dm  Gm[Frase 4]');
   });
 });
 
@@ -164,7 +231,7 @@ describe('texto colado de outros lugares', () => {
 
   it('o leitor não repete título e tom na parte preta: a letra começa do jeito que foi escrita', () => {
     const rows = layoutRows('Flash (Minha Mente)\n\nTom: Gm\n\nGm\nO combinado era', { cols: 40, steps: 2, key: 'Am' });
-    expect(rows.map(r => r.text)).toEqual(['Flash (Minha Mente)', '', 'Tom: Gm', '', 'Am', 'O combinado era']);
+    expect(rows.map(r => r.text)).toEqual(['Flash (Minha Mente)', '', 'Tom: Am', '', 'Am', 'O combinado era']);
     expect(layoutRows('Bb\nletra', { cols: 40, steps: 1, key: 'B' })[0].text).toBe('B');
     expect(layoutRows('Bb\nletra', { cols: 40, steps: 1, key: 'Cb' })[0].text).toBe('B');
     expect(layoutRows('A\nletra', { cols: 40, steps: 1, key: 'Bb' })[0].text).toBe('Bb');
