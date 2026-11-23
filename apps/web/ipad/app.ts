@@ -516,8 +516,11 @@ function fecharLeitor() {
 
 const MARGEM = 8;
 
-/** Calcula as páginas da música atual para o tamanho da tela. */
-function montarMusica(repetindo?: boolean) {
+/**
+ * Calcula as páginas da música atual para o tamanho da tela.
+ * `tentativa` e `maxLinhas` são das chamadas de correção (ver o fim da função).
+ */
+function montarMusica(tentativa = 0, maxLinhas = 0) {
   if (!L) return;
   const paraFim = L.irParaFim;
   const f = L.faixas[L.atual];
@@ -532,6 +535,7 @@ function montarMusica(repetindo?: boolean) {
   const largura = Math.max(120, (w - MARGEM * 2 - (duas ? MARGEM * 2 : 0)) / L.porVez);
   L.paisagem = paisagem;
   const grade = gridFor(largura - recuo, Math.max(120, h - 4), tamanho, paisagem ? config.paisagem : config.retrato);
+  if (maxLinhas && !L.ajustando && grade.rows > maxLinhas) grade.rows = maxLinhas;
   const passos = L.tons[f.musica.id] || 0;
   const tom = f.musica.tom ? transposeKey(f.musica.tom, passos) : '';
   L.paginas = layoutPages(f.letra, { cols: grade.cols, rows: grade.rows, steps: passos, show: config.soLetra ? 'letra' : 'tudo', key: tom });
@@ -539,12 +543,21 @@ function montarMusica(repetindo?: boolean) {
   if (L.irParaFim) { L.irParaFim = false; L.pagina = Math.max(0, Math.floor((total - 1) / L.porVez) * L.porVez); }
   else L.pagina = Math.min(Math.floor(L.pagina / L.porVez) * L.porVez, Math.max(0, total - 1));
   desenharPagina(grade, largura, recuo, tom);
-  // A barra de cima só ganha título e artista dentro de desenharPagina, e aí fica mais alta e
-  // encolhe a área da cifra. Se a área mudou depois de desenhar, calcula de novo com a altura
-  // certa, senão as últimas linhas ficam escondidas atrás do rodapé.
-  if (!repetindo && (area.clientHeight !== h || area.clientWidth !== w)) {
+  if (tentativa >= 2 || L.ajustando) return;
+  // Confere na tela de verdade quantas linhas cabem. A barra de cima cresce depois de ganhar
+  // título e artista, e o Safari antigo do iPad pode arredondar a altura das linhas para cima;
+  // nos dois casos as últimas linhas ficavam escondidas atrás do rodapé. Se não cabe tudo,
+  // monta de novo com menos linhas por página (a que sobra vai para a próxima página).
+  const linha = (document.getElementById('l-paginas') as HTMLElement).querySelector('.l-linha') as HTMLElement | null;
+  if (!linha) return;
+  const caixaArea = area.getBoundingClientRect();
+  const caixaLinha = linha.getBoundingClientRect();
+  const alturaLinha = caixaLinha.bottom - caixaLinha.top;
+  if (alturaLinha <= 0) return;
+  const cabem = Math.max(4, Math.floor((caixaArea.bottom - caixaLinha.top + 0.5) / alturaLinha));
+  if (area.clientHeight !== h || area.clientWidth !== w || cabem < grade.rows) {
     L.irParaFim = paraFim;
-    montarMusica(true);
+    montarMusica(tentativa + 1, Math.min(cabem, maxLinhas || cabem));
   }
 }
 
