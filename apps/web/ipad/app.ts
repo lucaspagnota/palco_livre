@@ -517,8 +517,9 @@ function fecharLeitor() {
 const MARGEM = 8;
 
 /** Calcula as páginas da música atual para o tamanho da tela. */
-function montarMusica() {
+function montarMusica(repetindo?: boolean) {
   if (!L) return;
+  const paraFim = L.irParaFim;
   const f = L.faixas[L.atual];
   const area = document.getElementById('l-area') as HTMLElement;
   const w = area.clientWidth;
@@ -538,6 +539,13 @@ function montarMusica() {
   if (L.irParaFim) { L.irParaFim = false; L.pagina = Math.max(0, Math.floor((total - 1) / L.porVez) * L.porVez); }
   else L.pagina = Math.min(Math.floor(L.pagina / L.porVez) * L.porVez, Math.max(0, total - 1));
   desenharPagina(grade, largura, recuo, tom);
+  // A barra de cima só ganha título e artista dentro de desenharPagina, e aí fica mais alta e
+  // encolhe a área da cifra. Se a área mudou depois de desenhar, calcula de novo com a altura
+  // certa, senão as últimas linhas ficam escondidas atrás do rodapé.
+  if (!repetindo && (area.clientHeight !== h || area.clientWidth !== w)) {
+    L.irParaFim = paraFim;
+    montarMusica(true);
+  }
 }
 
 let ultimaGrade: { grade: ReturnType<typeof gridFor>; largura: number; recuo: number; tom: string } | null = null;
